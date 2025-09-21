@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "iris-shader-folder",
+	"id": "iris_shader_folder",
 	"version": "${version}",
 	"name": "Iris Shader Folder",
 	"description": "Hides specified shader packs in Iris shaders menu",
@@ -12,7 +12,7 @@
 		"sources": "https://github.com/SpacEagle17/IrisShaderFolder"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/iris-shader-folder/icon.png",
+	"icon": "assets/iris_shader_folder/logo.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [
@@ -20,6 +20,6 @@
 		]
 	},
 	"mixins": [
-		"iris-shader-folder.mixins.json"
+		"iris_shader_folder.mixins.json"
 	]
 }
