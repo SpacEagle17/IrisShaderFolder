@@ -1,9 +1,15 @@
 {
   "required": true,
   "package": "com.spaceagle17.iris_shader_folder.mixin",
+  "refmap": "iris_shader_folder.refmap.json",
   "plugin": "com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
     "IrisLegacyHideShaderPacksMixin",
     "IrisModernHideShaderPacksMixin"
-  ]
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8.5"
 }

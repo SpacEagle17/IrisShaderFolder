@@ -3,34 +3,85 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.133'
+    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'org.spongepowered.mixin' version '0.7.+'  // Add Mixin plugin
 }
 
 version = mod_version
 group = mod_group_id
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
 
 base {
     archivesName = "iris_shader_folder"
 }
 
+minecraft {
+    // The mappings can be changed at any time and must be in the following format.
+    mappings channel: 'official', version: minecraft_version
+    
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            
+            mods {
+                iris_shader_folder {
+                    source sourceSets.main
+                }
+            }
+        }
+        
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            
+            mods {
+                iris_shader_folder {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+// Mixin configuration
+mixin {
+    add sourceSets.main, "iris_shader_folder.mixins.json"
+    config "iris_shader_folder.mixins.json"
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        name = 'SpongePowered'
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
-    compileOnly "net.neoforged:neoforge:${neo_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    
+    // Include Mixin annotation processor
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    implementation 'org.spongepowered:mixin:0.8.5'
 }
 
+// Process resources
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
         minecraft_version      : minecraft_version,
         minecraft_version_range: minecraft_version_range,
-        neo_version            : neo_version,
-        neo_version_range      : neo_version_range,
+        forge_version          : forge_version,
+        forge_version_range    : forge_version_range,
         loader_version_range   : loader_version_range,
         mod_id                 : mod_id,
         mod_name               : mod_name,
@@ -41,32 +92,27 @@ tasks.withType(ProcessResources).configureEach {
     ]
     inputs.properties replaceProperties
 
-    filesMatching('META-INF/*.toml') {
+    filesMatching('META-INF/mods.toml') {
         expand replaceProperties
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
 jar {
-    inputs.property "archivesName", project.base.archivesName
-
-    from("LICENSE") {
-        rename { "${it}_${inputs.properties.archivesName}" }
+    finalizedBy 'reobfJar'
+    
+    // Add this line to handle duplicates
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    manifest {
+        attributes([
+            "Specification-Title": mod_id,
+            "Specification-Vendor": mod_authors,
+            "Specification-Version": "1",
+            "Implementation-Title": mod_name,
+            "Implementation-Version": mod_version,
+            "Implementation-Vendor": mod_authors,
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "MixinConfigs": "iris_shader_folder.mixins.json"
+        ])
     }
-}
-
-// configure the maven publication
-publishing {
-//    publications {
-//        create("mavenJava", MavenPublication) {
-//            artifactId = project.archives_base_name
-//            from components.java
-//        }
-//    }
-//    repositories {
-//        // Add repositories to publish to here if needed
-//    }
 }
