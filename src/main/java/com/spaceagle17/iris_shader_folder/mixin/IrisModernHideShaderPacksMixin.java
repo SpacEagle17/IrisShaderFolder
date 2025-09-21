@@ -22,7 +22,7 @@ public class IrisModernHideShaderPacksMixin {
     private List<String> filterShaderPacks(List<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
         if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
-            System.out.println("This is Iris Legacy!!");
+            System.out.println("This is Iris Modern!!");
         }
         return names.stream()
             .filter(filterSystem::shouldFilterShaderPack)
