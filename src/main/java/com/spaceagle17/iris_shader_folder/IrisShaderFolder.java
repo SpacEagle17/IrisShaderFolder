@@ -1,15 +1,15 @@
 package com.spaceagle17.iris_shader_folder;
 
-import net.fabricmc.api.ModInitializer;
+import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IrisShaderFolder implements ModInitializer {
-    public static final String MOD_ID = "iris-shader-folder";
+@Mod("iris_shader_folder")
+public class IrisShaderFolder {
+    public static final String MOD_ID = "IrisShaderFolder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    @Override
-    public void onInitialize() {
+    public IrisShaderFolder() {
         ConfigManager.getInstance();
         ShaderFilterSystem.getInstance();
         LOGGER.info("Iris Shader Folder Mod initialized");
