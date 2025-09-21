@@ -10,12 +10,8 @@ public class IrisShaderFolder implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Initialize configuration
         ConfigManager.getInstance();
-        
-        // Initialize filter system
         ShaderFilterSystem.getInstance();
-        
         LOGGER.info("Iris Shader Folder Mod initialized");
     }
 }

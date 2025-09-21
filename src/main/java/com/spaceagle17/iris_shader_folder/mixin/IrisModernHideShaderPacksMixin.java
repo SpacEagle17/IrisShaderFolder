@@ -1,7 +1,6 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
 import com.spaceagle17.iris_shader_folder.ConfigManager;
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -23,7 +22,7 @@ public class IrisModernHideShaderPacksMixin {
     private List<String> filterShaderPacks(List<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
         if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
-            IrisShaderFolder.LOGGER.info("This is Iris Modern!!");
+            System.out.println("This is Iris Legacy!!");
         }
         return names.stream()
             .filter(filterSystem::shouldFilterShaderPack)
