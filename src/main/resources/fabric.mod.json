@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "iris-shader-folder",
+	"version": "${version}",
+	"name": "Iris Shader Folder",
+	"description": "Hides specified shader packs in Iris shaders menu",
+	"authors": [
+		"SpacEagle17"
+	],
+	"contact": {
+		"homepage": "https://euphoriapatches.com/discord",
+		"sources": "https://github.com/SpacEagle17/IrisShaderFolder"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/iris-shader-folder/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"com.spaceagle17.iris_shader_folder.IrisShaderFolder"
+		]
+	},
+	"mixins": [
+		"iris-shader-folder.mixins.json"
+	]
+}
