@@ -1,6 +1,7 @@
 package com.spaceagle17.iris_shader_folder;
 
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +14,9 @@ import java.util.List;
 public class IrisShaderFolder {
     public static final String MOD_ID = "iris_shader_folder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.1.0";
 
-    public static Path shaderpacks = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+    public static Path shaderpacks = FMLPaths.GAMEDIR.get().resolve("shaderpacks");;
     private static IrisShaderFolder INSTANCE;
     public static boolean debugLoggingEnabled = false;
     public static List<String> filterPatterns = new ArrayList<>();
