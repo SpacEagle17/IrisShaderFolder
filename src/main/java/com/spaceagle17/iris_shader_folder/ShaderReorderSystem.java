@@ -1,12 +1,9 @@
 package com.spaceagle17.iris_shader_folder;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ShaderReorderSystem {
     private static ShaderReorderSystem INSTANCE;
-    private static final Pattern REORDER_PATTERN = Pattern.compile("(.+)\\s*->\\s*(\\d+)");
     
     private ShaderReorderSystem() {
         // Private constructor for singleton
@@ -41,27 +38,26 @@ public class ShaderReorderSystem {
             }
         }
         
-        // If there are no reorder patterns, return the result)
-        if (IrisShaderFolder.getInstance().getReorderPatterns().isEmpty()) {
+        // If there are no reorder patterns, return the result
+        List<String> reorderPatterns = IrisShaderFolder.getInstance().getReorderPatterns();
+        if (reorderPatterns.isEmpty()) {
             return result;
         }
         
-        // Parse reorder patterns
+        // Create rules based on line order
         List<ReorderRule> rules = new ArrayList<>();
-        for (String reorderPatternStr : IrisShaderFolder.getInstance().getReorderPatterns()) {
-            Matcher matcher = REORDER_PATTERN.matcher(reorderPatternStr);
-            if (matcher.matches()) {
-                String pattern = matcher.group(1).trim();
-                int position = Integer.parseInt(matcher.group(2).trim()) - 1; // Convert to 0-based index
-                position = Math.max(0, position); // Ensure it's not negative
-                rules.add(new ReorderRule(pattern, position));
+        for (int i = 0; i < reorderPatterns.size(); i++) {
+            String pattern = reorderPatterns.get(i).trim();
+            // Position is determined by line index (convert to 0-based)
+            int position = i;
+            rules.add(new ReorderRule(pattern, position));
+            
+            if (IrisShaderFolder.debugLoggingEnabled) {
+                IrisShaderFolder.LOGGER.info("Added reorder rule: pattern '" + pattern + "' at position " + (position + 1));
             }
         }
         
-        // Sort rules by position (lower positions first)
-        rules.sort(Comparator.comparingInt(ReorderRule::getPosition));
-        
-        // Process each rule
+        // Process each rule in order
         int nextAvailableIndex = IrisShaderFolder.isSpacEagle() ? 1 : 0; // Start at index 1 if Euphoria-Patches is at 0
         for (ReorderRule rule : rules) {
             // Find matching packs

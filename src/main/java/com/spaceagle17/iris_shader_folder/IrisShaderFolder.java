@@ -14,7 +14,7 @@ import java.util.List;
 public class IrisShaderFolder {
     public static final String MOD_ID = "iris_shader_folder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.1";
 
     public static Path shaderpacks = FMLPaths.GAMEDIR.get().resolve("shaderpacks");
     private static IrisShaderFolder INSTANCE;
@@ -61,13 +61,11 @@ public class IrisShaderFolder {
             // If the section doesn't exist or is empty, create it with example content
             String reorderDescription =
                 "List of shaderpacks to reorder in the shaderpacks selection menu, one per line\n" +
-                "Format: <pattern> -> <position>\n" +
-                "  - <pattern>: Shaderpack name or pattern (supports {version} and custom regex in braces)\n" +
-                "  - <position>: 1-based index (1 = first slot, 2 = second, etc.)\n" +
+                "The position is determined by line order (first line = position 1, etc.)\n" +
                 "Examples:\n" +
-                "  - Exact match: Euphoria-Patches -> 1\n" +
-                "  - With version: ComplementaryReimagined_r{version} -> 2\n" +
-                "  - With regex: BSL{.*} -> 2\n" +
+                "  - First position: {.*}EuphoriaPatches{.*}\n" +
+                "  - Second position: Complementary{.*}_r{version}\n" +
+                "  - Third position: BSL{.*}\n" +
                 "If multiple shaderpacks match a pattern, they are inserted at the given position, sorted alphabetically.\n" +
                 "{version} matches any version number pattern like 1.2.3 or 4.5\n" +
                 "Other {xyz} are treated as regex patterns (very powerful, be careful!)\n" +
@@ -75,9 +73,9 @@ public class IrisShaderFolder {
 
             String defaultContent =
                 "# Add reorder patterns here, one per line\n" +
-                "# Euphoria-Patches -> 1\n" +
-                "# Complementary{.*}_r{version} -> 2\n" +
-                "# BSL{.*} -> 3";
+                "# {.*}EuphoriaPatches{.*}\n" +
+                "# Complementary{.*}_r{version}\n" +
+                "# BSL{.*}";
 
             ConfigManager.writeSection("reorder", defaultContent, reorderDescription);
         }
