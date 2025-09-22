@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -27,7 +28,7 @@ public class ShaderFilterSystem {
     }
     
     private void writeDebug(String message, boolean append) {
-        if (!ConfigManager.getInstance().isDebugLoggingEnabled()) {
+        if (!IrisShaderFolder.debugLoggingEnabled) {
             return;
         }
         
@@ -39,8 +40,8 @@ public class ShaderFilterSystem {
     }
     
     public void updatePatterns() {
-        List<String> filterPatterns = ConfigManager.getInstance().getFilterPatterns();
-        boolean debugLogging = ConfigManager.getInstance().isDebugLoggingEnabled();
+        List<String> filterPatterns = IrisShaderFolder.filterPatterns;
+        boolean debugLogging = IrisShaderFolder.debugLoggingEnabled;
         
         // Only recompile if the filter patterns have changed or debug logging setting changed
         if (filterPatterns.equals(lastFilterPatterns) && debugLogging == lastDebugLogSetting) {
@@ -169,14 +170,14 @@ public class ShaderFilterSystem {
     
     public boolean shouldFilterShaderPack(String packName) {
         // Check for config file changes
-        if (ConfigManager.getInstance().checkForUpdates()) {
+        if (ConfigManager.checkForUpdates()) {
             updatePatterns();
         }
         
         for (Pattern pattern : compiledPatterns) {
             if (pattern.matcher(packName).matches()) {
                 // Only log if debug logging is enabled
-                if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+                if (IrisShaderFolder.debugLoggingEnabled) {
                     IrisShaderFolder.LOGGER.info("Filtering out shader pack: " + packName);
                     writeDebug("Filtering out shader pack: " + packName + "\n", true);
                 }
@@ -185,5 +186,32 @@ public class ShaderFilterSystem {
         }
         
         return true; // Keep this pack
+    }
+    
+    public boolean matchesPattern(String packName, String patternStr) {
+        if (patternStr.trim().isEmpty() || patternStr.startsWith("#")) {
+            return false;
+        }
+        
+        try {
+            // Convert the pattern to regex
+            String regexPattern = convertToRegex(patternStr);
+            
+            // Add the optional .zip extension
+            String finalPattern = "^" + regexPattern + "(\\.zip)?$";
+            
+            // Compile and test the pattern
+            Pattern pattern = Pattern.compile(finalPattern, Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(packName);
+            
+            return matcher.matches();
+        } catch (PatternSyntaxException e) {
+            String errorMsg = "Invalid pattern: " + patternStr + " - " + e.getMessage();
+            IrisShaderFolder.LOGGER.error(errorMsg);
+            if (IrisShaderFolder.debugLoggingEnabled) {
+                writeDebug("ERROR: " + errorMsg + "\n", true);
+            }
+            return false;
+        }
     }
 }
