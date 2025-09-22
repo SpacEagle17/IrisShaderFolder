@@ -1,13 +1,15 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
-import com.spaceagle17.iris_shader_folder.ConfigManager;
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Pseudo
@@ -19,13 +21,20 @@ public class IrisLegacyHideShaderPacksMixin {
         ordinal = 0,
         remap = false
     )
-    private Collection<String> filterShaderPacks(Collection<String> names) {
+    private Collection<String> filterAndReorderShaderPacks(Collection<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
-        if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+        ShaderReorderSystem reorderSystem = ShaderReorderSystem.getInstance();
+        
+        if (IrisShaderFolder.debugLoggingEnabled) {
             System.out.println("This is Iris Legacy!!");
         }
-        return names.stream()
+        
+        // First filter the packs
+        List<String> filteredPacks = names.stream()
             .filter(filterSystem::shouldFilterShaderPack)
             .collect(Collectors.toList());
+        
+        // Then reorder them
+        return reorderSystem.reorderShaderPacks(filteredPacks);
     }
 }

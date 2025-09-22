@@ -1,6 +1,5 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
-import com.spaceagle17.iris_shader_folder.ConfigManager;
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -26,14 +25,14 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.contains("IrisLegacyHideShaderPacksMixin")) {
-            if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+            if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for legacy Iris class: " + LEGACY_IRIS_CLASS);
             }
             return checkClassExists(LEGACY_IRIS_CLASS);
         }
 
         if (mixinClassName.contains("IrisModernHideShaderPacksMixin")) {
-            if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+            if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for modern Iris class: " + MODERN_IRIS_CLASS);
             }
             return checkClassExists(MODERN_IRIS_CLASS);
@@ -46,7 +45,7 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
     private boolean checkClassExists(String className) {
         String resourceName = className.replace('.', '/') + ".class";
         boolean isPresent = getClass().getClassLoader().getResource(resourceName) != null;
-        if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+        if (IrisShaderFolder.debugLoggingEnabled) {
             if (isPresent) {
                 IrisShaderFolder.LOGGER.info("Found class: " + className);
             } else {

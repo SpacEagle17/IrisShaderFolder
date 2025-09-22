@@ -1,7 +1,8 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
-import com.spaceagle17.iris_shader_folder.ConfigManager;
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,13 +20,20 @@ public class IrisModernHideShaderPacksMixin {
         ordinal = 0,
         remap = false
     )
-    private List<String> filterShaderPacks(List<String> names) {
+    private List<String> filterAndReorderShaderPacks(List<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
-        if (ConfigManager.getInstance().isDebugLoggingEnabled()) {
+        ShaderReorderSystem reorderSystem = ShaderReorderSystem.getInstance();
+        
+        if (IrisShaderFolder.debugLoggingEnabled) {
             System.out.println("This is Iris Modern!!");
         }
-        return names.stream()
+        
+        // First filter the packs
+        List<String> filteredPacks = names.stream()
             .filter(filterSystem::shouldFilterShaderPack)
             .collect(Collectors.toList());
+        
+        // Then reorder them
+        return reorderSystem.reorderShaderPacks(filteredPacks);
     }
 }
