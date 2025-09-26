@@ -24,14 +24,14 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains("IrisLegacyHideShaderPacksMixin")) {
+        if (mixinClassName.contains("IrisLegacyHideShaderPacksMixin") || mixinClassName.contains("IrisLegacyShaderEntryMixin")) {
             if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for legacy Iris class: " + LEGACY_IRIS_CLASS);
             }
             return checkClassExists(LEGACY_IRIS_CLASS);
         }
 
-        if (mixinClassName.contains("IrisModernHideShaderPacksMixin")) {
+        if (mixinClassName.contains("IrisModernHideShaderPacksMixin") || mixinClassName.contains("IrisModernShaderEntryMixin")) {
             if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for modern Iris class: " + MODERN_IRIS_CLASS);
             }

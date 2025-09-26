@@ -5,7 +5,9 @@
   "plugin": "com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
     "IrisLegacyHideShaderPacksMixin",
-    "IrisModernHideShaderPacksMixin"
+    "IrisLegacyShaderEntryMixin",
+    "IrisModernHideShaderPacksMixin",
+    "IrisModernShaderEntryMixin"
   ],
   "client": [],
   "injectors": {
