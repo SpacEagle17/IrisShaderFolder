@@ -4,8 +4,10 @@
   "plugin": "com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
     "IrisLegacyHideShaderPacksMixin",
+    "IrisLegacyOptionMenuConstructorMixin",
     "IrisLegacyShaderEntryMixin",
     "IrisModernHideShaderPacksMixin",
+    "IrisModernOptionMenuConstructorMixin",
     "IrisModernShaderEntryMixin"
   ]
 }

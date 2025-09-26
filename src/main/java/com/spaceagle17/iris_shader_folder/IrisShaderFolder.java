@@ -20,6 +20,7 @@ public class IrisShaderFolder implements ModInitializer {
     public static boolean debugLoggingEnabled = false;
     public static List<String> filterPatterns = new ArrayList<>();
     public static List<String> reorderPatterns = new ArrayList<>();
+    public static List<String> recolorPatterns = new ArrayList<>();
 
     public static IrisShaderFolder getInstance() {
         return INSTANCE;
@@ -79,6 +80,40 @@ public class IrisShaderFolder implements ModInitializer {
             ConfigManager.writeSection("reorder", defaultContent, reorderDescription);
         }
         reorderPatterns = ConfigManager.getSectionItems("reorder");
+
+        if (ConfigManager.getSectionItems("recolor").isEmpty()) {
+            // If the section doesn't exist or is empty, create it with example content
+            String recolorDescription = 
+                "List of recoloring rules for shaderpack names in the selection menu\n" +
+                "Each rule recolors either a specific part of the shaderpack name or the entire name.\n" +
+                "{version} matches any version number pattern like 1.2.3 or 4.5\n" +
+                "Other {xyz} are treated as regex patterns (very powerful, be careful!)\n" +
+                "Format: shader_pattern [|] part_pattern [->] color_name [|] part_pattern2 [->] color_name2 ....\n" +
+                "  - shader_pattern: Matches shaderpack names (exact or with {regex})\n" +
+                "  - part_pattern: Matches the part of the name to recolor (exact or with {regex})\n" +
+                "      - Use {all} to recolor the entire name\n" +
+                "  - color_name: One of the official Minecraft color names or Minecraft color codes:\n" +
+                "    black (§0), dark_blue (§1), dark_green (§2), dark_aqua (§3), dark_red (4), dark_purple (§5), gold (§6), gray (§7),\n" +
+                "    dark_gray (§8), blue (§9), green (§a), aqua (§b), red (§c), light_purple (§d), yellow (§e), white (§f)\n" +
+                "  - The \"part_pattern [->] color_name\" combination can be repeated as often as desired to get multiple colors in the same name\n" +
+                "\n" +
+                "Examples:\n" +
+                "  - Complementary{.*} [|] Comp [->] red [|] {version} [->] §6\n" +
+                "      Recolors the \"Comp\" part to red and the version part in any Complementary shaderpack name to gold.\n" +
+                "  - {.*}EuphoriaPatches{.*} [|] EuphoriaPatches_{version} [->] light_purple\n" +
+                "      Recolors the \"EuphoriaPatches_{version}\" part in any shader with EuphoriaPatches in the name to light_purple.\n" +
+                "  - test [|] {all} [->] red\n" +
+                "      Recolors the entire name \"test\" to red.\n";
+
+            String defaultContent =
+                "# Add recolor rules here, one per line\n" +
+                "# Complementary{.*} [|] Comp [->] red [|] {version} [->] §6\n" +
+                "# {.*}EuphoriaPatches{.*} [|] EuphoriaPatches_{version} [->] light_purple\n" +
+                "# test [|] {all} [->] red";
+
+            ConfigManager.writeSection("recolor", defaultContent, recolorDescription);
+        }
+        recolorPatterns = ConfigManager.getSectionItems("recolor");
     }
 
     public List<String> getFilterPatterns() {
@@ -87,6 +122,10 @@ public class IrisShaderFolder implements ModInitializer {
 
     public List<String> getReorderPatterns() {
         return reorderPatterns;
+    }
+
+    public List<String> getRecolorPatterns() {
+        return recolorPatterns;
     }
 
     @Override

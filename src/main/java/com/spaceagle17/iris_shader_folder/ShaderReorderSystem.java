@@ -1,5 +1,6 @@
 package com.spaceagle17.iris_shader_folder;
 
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.*;
 
 public class ShaderReorderSystem {
@@ -33,9 +34,7 @@ public class ShaderReorderSystem {
                 result.add(0, euphoriaPatches);
             }
             
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.info("SpacEagle detected: Euphoria-Patches prioritized to first position");
-            }
+            ShaderPatternUtil.logDebug("SpacEagle detected: Euphoria-Patches prioritized to first position");
         }
         
         // If there are no reorder patterns, return the result
@@ -52,9 +51,7 @@ public class ShaderReorderSystem {
             int position = i;
             rules.add(new ReorderRule(pattern, position));
             
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.info("Added reorder rule: pattern '" + pattern + "' at position " + (position + 1));
-            }
+            ShaderPatternUtil.logDebug("Added reorder rule: pattern '" + pattern + "' at position " + (position + 1));
         }
         
         // Process each rule in order
@@ -71,7 +68,7 @@ public class ShaderReorderSystem {
                     continue;
                 }
                 
-                if (ShaderFilterSystem.getInstance().matchesPattern(pack, rule.getPattern())) {
+                if (ShaderPatternUtil.matchesPattern(pack, rule.getPattern())) {
                     matchingPacks.add(pack);
                     it.remove();
                 }

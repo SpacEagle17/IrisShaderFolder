@@ -1,10 +1,10 @@
 package com.spaceagle17.iris_shader_folder;
 
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -76,8 +76,8 @@ public class ShaderFilterSystem {
                     debugContent.append("Processing pattern: '").append(pattern).append("'\n");
                 }
                 
-                // Convert the pattern to regex
-                String regexPattern = convertToRegex(pattern);
+                // Convert the pattern to regex using utility class
+                String regexPattern = ShaderPatternUtil.convertToRegex(pattern);
                 if (debugLogging) {
                     debugContent.append("  → Converted to regex: '").append(regexPattern).append("'\n");
                 }
@@ -90,7 +90,7 @@ public class ShaderFilterSystem {
                 }
 
                 if (debugLogging) {
-                    IrisShaderFolder.LOGGER.info("Creating pattern: " + finalPattern);
+                    ShaderPatternUtil.logDebug("Creating pattern: " + finalPattern);
                 }
                 compiledPatterns.add(Pattern.compile(finalPattern, Pattern.CASE_INSENSITIVE));
             } catch (PatternSyntaxException e) {
@@ -101,71 +101,6 @@ public class ShaderFilterSystem {
                 }
             }
         }
-    }
-    
-    private String convertToRegex(String pattern) {
-        StringBuilder result = new StringBuilder();
-        int currentPos = 0;
-        
-        while (currentPos < pattern.length()) {
-            // Find next opening brace
-            int openBrace = pattern.indexOf('{', currentPos);
-            
-            if (openBrace == -1) {
-                // No more braces, add the rest as literal
-                result.append(Pattern.quote(pattern.substring(currentPos)));
-                break;
-            }
-            
-            // Add the part before the brace as literal
-            if (openBrace > currentPos) {
-                result.append(Pattern.quote(pattern.substring(currentPos, openBrace)));
-            }
-            
-            // Find the matching closing brace
-            int closeBrace = findMatchingCloseBrace(pattern, openBrace);
-            
-            if (closeBrace == -1) {
-                // No matching closing brace, treat the rest as literal
-                result.append(Pattern.quote(pattern.substring(currentPos)));
-                break;
-            }
-            
-            // Extract the content inside braces
-            String braceContent = pattern.substring(openBrace + 1, closeBrace);
-            
-            // Handle special case for {version}
-            if ("version".equals(braceContent)) {
-                result.append("\\d+(\\.\\d+)*");
-            } else {
-                // Regular expression - use as is
-                result.append(braceContent);
-            }
-            
-            // Move past the closing brace
-            currentPos = closeBrace + 1;
-        }
-        
-        return result.toString();
-    }
-    
-    private int findMatchingCloseBrace(String text, int openBracePos) {
-        int depth = 1;
-        
-        for (int i = openBracePos + 1; i < text.length(); i++) {
-            char c = text.charAt(i);
-            
-            if (c == '{') {
-                depth++;
-            } else if (c == '}') {
-                depth--;
-                if (depth == 0) {
-                    return i;
-                }
-            }
-        }
-        
-        return -1; // No matching close brace
     }
     
     public boolean shouldFilterShaderPack(String packName) {
@@ -189,29 +124,7 @@ public class ShaderFilterSystem {
     }
     
     public boolean matchesPattern(String packName, String patternStr) {
-        if (patternStr.trim().isEmpty() || patternStr.startsWith("#")) {
-            return false;
-        }
-        
-        try {
-            // Convert the pattern to regex
-            String regexPattern = convertToRegex(patternStr);
-            
-            // Add the optional .zip extension
-            String finalPattern = "^" + regexPattern + "(\\.zip)?$";
-            
-            // Compile and test the pattern
-            Pattern pattern = Pattern.compile(finalPattern, Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(packName);
-            
-            return matcher.matches();
-        } catch (PatternSyntaxException e) {
-            String errorMsg = "Invalid pattern: " + patternStr + " - " + e.getMessage();
-            IrisShaderFolder.LOGGER.error(errorMsg);
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                writeDebug("ERROR: " + errorMsg + "\n", true);
-            }
-            return false;
-        }
+        // Use the utility method instead of duplicating code
+        return ShaderPatternUtil.matchesPattern(packName, patternStr);
     }
 }
