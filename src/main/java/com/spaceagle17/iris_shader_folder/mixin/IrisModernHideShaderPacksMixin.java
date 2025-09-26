@@ -3,6 +3,7 @@ package com.spaceagle17.iris_shader_folder.mixin;
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
 import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
+import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Pseudo
+@Debug(export = true)
 @Mixin(targets = IrisShaderFolderMixinPlugin.MODERN_IRIS_CLASS, remap = false)
 public class IrisModernHideShaderPacksMixin {
     @ModifyVariable(
