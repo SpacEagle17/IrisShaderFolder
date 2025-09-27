@@ -2,7 +2,9 @@ package com.spaceagle17.iris_shader_folder.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Debug;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Pseudo
