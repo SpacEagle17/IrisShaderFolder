@@ -4,16 +4,16 @@
   "refmap": "iris_shader_folder.refmap.json",
   "plugin": "com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
-    "IrisLegacyHideShaderPacksMixin",
-    "IrisLegacyOptionMenuConstructorMixin",
-    "IrisLegacyShaderEntryMixin",
-    "IrisModernHideShaderPacksMixin",
-    "IrisModernOptionMenuConstructorMixin",
-    "IrisModernShaderEntryMixin"
+    "legacy.IrisLegacyHideShaderPacksMixin",
+    "legacy.IrisLegacyOptionMenuConstructorMixin",
+    "legacy.IrisLegacyShaderEntryMixin",
+    "modern.IrisModernHideShaderPacksMixin",
+    "modern.IrisModernOptionMenuConstructorMixin",
+    "modern.IrisModernShaderEntryMixin"
   ],
   "client": [
-    "IrisLegacyShaderPackScreenMixin",
-    "IrisModernShaderPackScreenMixin"
+    "legacy.IrisLegacyShaderPackScreenMixin",
+    "modern.IrisModernShaderPackScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

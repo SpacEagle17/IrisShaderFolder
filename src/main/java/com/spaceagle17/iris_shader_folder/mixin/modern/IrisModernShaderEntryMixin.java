@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin;
+package com.spaceagle17.iris_shader_folder.mixin.modern;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
@@ -19,6 +19,9 @@ import java.lang.reflect.Method;
 public class IrisModernShaderEntryMixin {
     @Unique
     private String currentShaderName;
+
+    @Unique
+    private String currentShaderNameRecolored;
     
     @Unique
     private boolean isCurrentlyHovered;
@@ -37,7 +40,8 @@ public class IrisModernShaderEntryMixin {
     )
     private String modifyNameVariable(String name) {
         String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(name);
-        this.currentShaderName = recoloredName;
+        this.currentShaderName = name;
+        this.currentShaderNameRecolored = recoloredName;
         return recoloredName;
     }
     
