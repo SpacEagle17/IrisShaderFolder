@@ -69,6 +69,7 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+	mappings loom.officialMojangMappings()
     
     // Include Mixin annotation processor
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'

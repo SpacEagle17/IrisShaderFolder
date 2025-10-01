@@ -11,7 +11,10 @@
     "IrisModernOptionMenuConstructorMixin",
     "IrisModernShaderEntryMixin"
   ],
-  "client": [],
+  "client": [
+    "IrisLegacyShaderPackScreenMixin",
+    "IrisModernShaderPackScreenMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   },
