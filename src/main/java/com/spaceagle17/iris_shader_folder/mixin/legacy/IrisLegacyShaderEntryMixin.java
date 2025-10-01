@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin;
+package com.spaceagle17.iris_shader_folder.mixin.legacy;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;

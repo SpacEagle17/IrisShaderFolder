@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin;
+package com.spaceagle17.iris_shader_folder.mixin.modern;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
