@@ -26,7 +26,8 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.contains("IrisLegacyHideShaderPacksMixin") ||
                 mixinClassName.contains("IrisLegacyShaderEntryMixin") ||
-                mixinClassName.contains("IrisLegacyOptionMenuConstructorMixin")) {
+                mixinClassName.contains("IrisLegacyOptionMenuConstructorMixin") ||
+                mixinClassName.contains("IrisLegacyShaderPackScreenMixin")) {
             if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for legacy Iris class: " + LEGACY_IRIS_CLASS);
             }
@@ -35,7 +36,8 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
 
         if (mixinClassName.contains("IrisModernHideShaderPacksMixin") ||
                 mixinClassName.contains("IrisModernShaderEntryMixin") ||
-                mixinClassName.contains("IrisModernOptionMenuConstructorMixin")) {
+                mixinClassName.contains("IrisModernOptionMenuConstructorMixin") ||
+                mixinClassName.contains("IrisModernShaderPackScreenMixin")) {
             if (IrisShaderFolder.debugLoggingEnabled) {
                 IrisShaderFolder.LOGGER.info("Checking for modern Iris class: " + MODERN_IRIS_CLASS);
             }

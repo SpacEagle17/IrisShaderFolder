@@ -9,5 +9,9 @@
     "IrisModernHideShaderPacksMixin",
     "IrisModernOptionMenuConstructorMixin",
     "IrisModernShaderEntryMixin"
+  ],
+  "client": [
+    "IrisLegacyShaderPackScreenMixin",
+    "IrisModernShaderPackScreenMixin"
   ]
 }
