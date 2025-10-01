@@ -2,6 +2,7 @@ package com.spaceagle17.iris_shader_folder.mixin;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
+import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -70,30 +71,36 @@ public class IrisLegacyShaderEntryMixin {
                 return;
             }
 
-            // Get the screen object through reflection
-            Field listField = this.getClass().getDeclaredField("list");
-            listField.setAccessible(true);
-            Object listObj = listField.get(this);
+            // Check if we have a tooltip for this shader
+            String tooltip = ShaderTooltipSystem.getInstance().getTooltip(currentShaderName);
+            
+            // Only proceed if we have a tooltip
+            if (tooltip != null && !tooltip.isEmpty()) {
+                // Get the screen object through reflection
+                Field listField = this.getClass().getDeclaredField("list");
+                listField.setAccessible(true);
+                Object listObj = listField.get(this);
 
-            Field screenField = listObj.getClass().getDeclaredField("screen");
-            screenField.setAccessible(true);
-            Object screen = screenField.get(listObj);
+                Field screenField = listObj.getClass().getDeclaredField("screen");
+                screenField.setAccessible(true);
+                Object screen = screenField.get(listObj);
 
-            String bodyText = "A Complementary Shaders Add-on - By SpacEagle17. Dev versions available at: §dhttps://euphoriapatches.com/support";
-            
-            Object[] components = irisShaderFolder$createTextComponents(currentShaderName, bodyText);
-            if (components == null) {
-                return;
-            }
-            
-            boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
-            
-            if (!success && IrisShaderFolder.debugLoggingEnabled) {
-                System.out.println("Could not find an appropriate method to set shader pack comment");
+                // Create text components for the tooltip
+                Object[] components = irisShaderFolder$createTextComponents(currentShaderNameRecolored, tooltip);
+                if (components == null) {
+                    return;
+                }
+
+                // Set the shader pack comment
+                boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
+
+                if (!success && IrisShaderFolder.debugLoggingEnabled) {
+                    System.out.println("Could not find an appropriate method to set shader pack comment");
+                }
             }
         } catch (Exception e) {
             if (IrisShaderFolder.debugLoggingEnabled) {
-                System.out.println("Error in Euphoria comment handling: " + e.getMessage());
+                System.out.println("Error in shader tooltip handling: " + e.getMessage());
                 e.printStackTrace();
             }
         }
