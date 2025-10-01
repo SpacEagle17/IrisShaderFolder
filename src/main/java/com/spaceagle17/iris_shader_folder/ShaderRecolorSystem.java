@@ -126,11 +126,13 @@ public class ShaderRecolorSystem {
     }
     
     private void addDefaultEuphoriaRules() {
-        String combinedPattern = "{.*(EuphoriaPatches|Euphoria-Patches).*}";
+        String combinedPattern = "{.*(EuphoriaPatches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP).*}";
         
         List<ColorRule> euphoriaRules = new ArrayList<>();
-        euphoriaRules.add(new ColorRule("+ EuphoriaPatches{.*}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("EP_{.*}", COLOR_MAP.get("light_purple")));
+
         
         recolorRules.add(new RecolorRule(combinedPattern, euphoriaRules));   
         ShaderPatternUtil.logDebug("Added default recolor rule for Euphoria Patches");
