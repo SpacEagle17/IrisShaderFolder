@@ -3,8 +3,9 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '6.0.+'
-    id 'org.spongepowered.mixin' version '0.7.+'  // Add Mixin plugin
+    id 'dev.architectury.loom' version '1.4-SNAPSHOT'
+    // Add this plugin for jar-in-jar capability
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 version = mod_version
@@ -15,48 +16,61 @@ java {
     withSourcesJar()
 }
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 base {
     archivesName = "iris_shader_folder"
 }
 
-minecraft {
-    // The mappings can be changed at any time and must be in the following format.
-    mappings channel: 'official', version: minecraft_version
+loom {
+    silentMojangMappingsLicense()
     
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            
-            mods {
-                iris_shader_folder {
-                    source sourceSets.main
-                }
-            }
-        }
+    forge {
+        mixinConfigs = ["iris_shader_folder.mixins.json"]
         
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            
-            mods {
-                iris_shader_folder {
-                    source sourceSets.main
-                }
-            }
+        // Add this to help with multi-version compatibility
+        dataGen {
+            mod(mod_id)
         }
     }
+    
+//     // This helps with multi-version compatibility
+//     runs {
+//         client {
+//             client()
+//             setConfigName("Minecraft Client")
+//             workingDirectory project.file('run')
+//             property 'forge.logging.markers', 'REGISTRIES'
+//             property 'forge.logging.console.level', 'debug'
+            
+//             mods {
+//                 iris_shader_folder {
+//                     source(sourceSets.main)
+//                 }
+//             }
+//         }
+        
+//         server {
+//             server()
+//             setConfigName("Minecraft Server")
+//             workingDirectory project.file('run')
+//             property 'forge.logging.markers', 'REGISTRIES'
+//             property 'forge.logging.console.level', 'debug'
+            
+//             mods {
+//                 iris_shader_folder {
+//                     source(sourceSets.main)
+//                 }
+//             }
+//         }
+//     }
 }
 
-// Mixin configuration
-mixin {
-    add sourceSets.main, "iris_shader_folder.mixins.json"
-    config "iris_shader_folder.mixins.json"
-}
+// mixin {
+//     add sourceSets.main, "iris_shader_folder.mixins.json"
+//     config "iris_shader_folder.mixins.json"
+// }
 
 repositories {
     mavenLocal()
@@ -67,21 +81,25 @@ repositories {
     }
 }
 
+configurations {
+    jarJar
+    implementation.extendsFrom jarJar
+}
+
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-	mappings loom.officialMojangMappings()
+    // Split minecraft and forge dependencies
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     
     // Include Mixin annotation processor
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     implementation 'org.spongepowered:mixin:0.8.5'
 
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
-        jarJar.ranged(it, "[0.5.0,)")
-    }
+    jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")
 }
 
-// Process resources
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
         minecraft_version      : minecraft_version,
@@ -104,9 +122,8 @@ tasks.withType(ProcessResources).configureEach {
 }
 
 jar {
-    finalizedBy 'reobfJar'
+    // Remove finalizedBy 'reobfJar' as Loom handles this differently
     
-    // Add this line to handle duplicates
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
     manifest {
