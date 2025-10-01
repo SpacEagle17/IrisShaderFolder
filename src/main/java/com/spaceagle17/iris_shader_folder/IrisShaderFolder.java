@@ -21,6 +21,7 @@ public class IrisShaderFolder implements ModInitializer {
     public static List<String> filterPatterns = new ArrayList<>();
     public static List<String> reorderPatterns = new ArrayList<>();
     public static List<String> recolorPatterns = new ArrayList<>();
+    public static List<String> tooltipPatterns = new ArrayList<>();
 
     public static IrisShaderFolder getInstance() {
         return INSTANCE;
@@ -114,6 +115,32 @@ public class IrisShaderFolder implements ModInitializer {
             ConfigManager.writeSection("recolor", defaultContent, recolorDescription);
         }
         recolorPatterns = ConfigManager.getSectionItems("recolor");
+        
+        // Add new tooltip section
+        if (ConfigManager.getSectionItems("tooltip").isEmpty()) {
+            // If the section doesn't exist or is empty, create it with example content
+            String tooltipDescription = 
+                "List of tooltip rules for shaderpacks in the selection menu\n" +
+                "Format: shader_pattern [|] tooltip_text\n" +
+                "  - shader_pattern: Matches shaderpack names (exact or with {regex})\n" +
+                "  - tooltip_text: Text to display when hovering over the shader\n" +
+                "\n" +
+                "Note: If a shader has its own description in its pack.json file, that description will be\n" +
+                "shown first, followed by your custom tooltip text if configured here.\n" +
+                "\n" +
+                "Examples:\n" +
+                "  - Complementary{.*} [|] Complementary is a shaderpack focused on performance and visual quality.\n" +
+                "  - {.*}EuphoriaPatches{.*} [|] A powerful add-on for Complementary Shaders.\n" +
+                "  - test [|] This is a test shaderpack.";
+
+            String defaultContent =
+                "# Add tooltip rules here, one per line\n" +
+                "# Complementary{.*} [|] Complementary is a shaderpack focused on performance and visual quality.\n" +
+                "# test [|] This is a test shaderpack.";
+
+            ConfigManager.writeSection("tooltip", defaultContent, tooltipDescription);
+        }
+        tooltipPatterns = ConfigManager.getSectionItems("tooltip");
     }
 
     public List<String> getFilterPatterns() {
@@ -126,6 +153,10 @@ public class IrisShaderFolder implements ModInitializer {
 
     public List<String> getRecolorPatterns() {
         return recolorPatterns;
+    }
+    
+    public List<String> getTooltipPatterns() {
+        return tooltipPatterns;
     }
 
     @Override
