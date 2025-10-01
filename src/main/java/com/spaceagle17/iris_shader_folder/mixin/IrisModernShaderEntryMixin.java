@@ -1,5 +1,6 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
 
 import org.spongepowered.asm.mixin.*;
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 @Pseudo
 @Debug(export = true)
@@ -16,6 +18,9 @@ import java.lang.reflect.Field;
 public class IrisModernShaderEntryMixin {
     @Unique
     private String currentShaderName;
+
+    @Unique
+    private String currentShaderNameRecolored;
     
     @Unique
     private boolean isCurrentlyHovered;
@@ -34,7 +39,8 @@ public class IrisModernShaderEntryMixin {
     )
     private String modifyNameVariable(String name) {
         String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(name);
-        this.currentShaderName = recoloredName;
+        this.currentShaderName = name;
+        this.currentShaderNameRecolored = recoloredName;
         return recoloredName;
     }
     
@@ -65,75 +71,178 @@ public class IrisModernShaderEntryMixin {
         at = @At("TAIL"))
     private void afterRenderText(CallbackInfo ci) {
         try {
-            if (isCurrentlyHovered && currentShaderName != null && currentShaderName.contains("Euphoria-Patches")) {
-                Field listField = this.getClass().getDeclaredField("list");
-                listField.setAccessible(true);
-                Object listObj = listField.get(this);
+            if (!isCurrentlyHovered || currentShaderName == null) {
+                return;
+            }
 
-                Field screenField = listObj.getClass().getDeclaredField("screen");
-                screenField.setAccessible(true);
-                Object screen = screenField.get(listObj);
+            // Get the screen object through reflection
+            Field listField = this.getClass().getDeclaredField("list");
+            listField.setAccessible(true);
+            Object listObj = listField.get(this);
 
-                Object commentTitle = null;
-                Object commentBody = null;
-                
-                String bodyText = "A Complementary Shaders Add-on - By SpacEagle17. Dev versions available at: §dhttps://euphoriapatches.com/support";
+            Field screenField = listObj.getClass().getDeclaredField("screen");
+            screenField.setAccessible(true);
+            Object screen = screenField.get(listObj);
 
-                // Try multiple approaches to create text components based on what's available in the current environment
-                
-                // 1. Try Fabric obfuscated names
+            String bodyText = "A Complementary Shaders Add-on - By SpacEagle17. Dev versions available at: §dhttps://euphoriapatches.com/support";
+
+            Object[] components = irisShaderFolder$createTextComponents(currentShaderNameRecolored, bodyText);
+            if (components == null) {
+                return;
+            }
+
+            boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
+
+            if (!success && IrisShaderFolder.debugLoggingEnabled) {
+                System.out.println("Could not find an appropriate method to set shader pack comment");
+            }
+        } catch (Exception e) {
+            if (IrisShaderFolder.debugLoggingEnabled) {
+                System.out.println("Error in Euphoria comment handling: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Creates text components using various approaches
+     * @return Array with [title, body] components or null if all approaches failed
+     */
+    @Unique
+    private Object[] irisShaderFolder$createTextComponents(String title, String body) {
+        // Define known classes and methods
+        String[][] approaches = {
+                // className, methodName
+                {"net.minecraft.class_2561", "method_43470"}, // Fabric modern
+                {"net.minecraft.network.chat.Component", "literal"}, // Forge/NeoForge modern
+                {"net.minecraft.network.chat.Component", "m_237113_"}, // 1.20.1 Mojang mappings
+                {"net.minecraft.network.chat.Component", "m_130674_"}, // 1.18.2 Mojang mappings
+        };
+
+        // Constructor approaches as fallback
+        String[] constructorClasses = {
+                "net.minecraft.class_2585", // Fabric old
+                "net.minecraft.network.chat.TextComponent", // Forge old
+                "net.minecraft.util.text.StringTextComponent" // Very old Forge
+        };
+
+        // Try each method approach
+        for (String[] approach : approaches) {
+            try {
+                Class<?> componentClass = Class.forName(approach[0]);
+                Method method = componentClass.getMethod(approach[1], String.class);
+                Object titleComponent = method.invoke(null, title);
+                Object bodyComponent = method.invoke(null, body);
+                return new Object[]{titleComponent, bodyComponent};
+            } catch (Exception ignored) {
+                // Try next approach
+            }
+        }
+
+        // Try constructor approaches
+        for (String className : constructorClasses) {
+            try {
+                Class<?> componentClass = Class.forName(className);
+                Object titleComponent = componentClass.getConstructor(String.class).newInstance(title);
+                Object bodyComponent = componentClass.getConstructor(String.class).newInstance(body);
+                return new Object[]{titleComponent, bodyComponent};
+            } catch (Exception ignored) {
+                // Try next approach
+            }
+        }
+
+        // If all approaches failed, try reflection
+        try {
+            // Find any component class we can use
+            Class<?> componentClass = null;
+            for (String className : new String[]{
+                    "net.minecraft.network.chat.Component",
+                    "net.minecraft.text.Text",
+                    "net.minecraft.class_2561"
+            }) {
                 try {
-                    Class<?> componentClass = Class.forName("net.minecraft.class_2561");
-                    commentTitle = componentClass.getMethod("method_43470", String.class)
-                            .invoke(null, currentShaderName);
-                    commentBody = componentClass.getMethod("method_43470", String.class)
-                            .invoke(null, bodyText);
-                } catch (Exception e) {
-                    // 2. Try older Fabric obfuscated names (TextComponent constructor)
-                    try {
-                        Class<?> textComponentClass = Class.forName("net.minecraft.class_2585");
-                        commentTitle = textComponentClass.getConstructor(String.class)
-                                .newInstance(currentShaderName);
-                        commentBody = textComponentClass.getConstructor(String.class)
-                                .newInstance(bodyText);
-                    } catch (Exception e2) {
-                        // 3. Try NeoForge/Forge names (Component.literal)
+                    componentClass = Class.forName(className);
+                    break;
+                } catch (ClassNotFoundException ignored) {
+                    // Try next class
+                }
+            }
+
+            if (componentClass != null) {
+                // Find any static method with String parameter
+                for (Method m : componentClass.getMethods()) {
+                    if (m.getParameterCount() == 1 &&
+                            m.getParameterTypes()[0] == String.class &&
+                            java.lang.reflect.Modifier.isStatic(m.getModifiers())) {
                         try {
-                            Class<?> componentClass = Class.forName("net.minecraft.network.chat.Component");
-                            commentTitle = componentClass.getMethod("literal", String.class)
-                                    .invoke(null, currentShaderName);
-                            commentBody = componentClass.getMethod("literal", String.class)
-                                    .invoke(null, bodyText);
-                        } catch (Exception e3) {
-                            // 4. Try older Forge names (TextComponent constructor)
+                            Object titleComponent = m.invoke(null, title);
+                            Object bodyComponent = m.invoke(null, body);
+                            return new Object[]{titleComponent, bodyComponent};
+                        } catch (Exception ignored) {
+                            // Try next method
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Reflection approach failed
+        }
+
+        if (IrisShaderFolder.debugLoggingEnabled) {
+            System.out.println("Failed to create text components - cannot set shader pack comment");
+        }
+        return null;
+    }
+    /**
+     * Attempts to find and invoke the setShaderPackComment method on the screen object
+     * @return true if successful, false otherwise
+     */
+    @Unique
+    private boolean irisShaderFolder$setShaderPackComment(Object screen, Object title, Object body) {
+        try {
+            // First try with exact method name
+            try {
+                Method method = screen.getClass().getDeclaredMethod("setShaderPackComment", title.getClass(), body.getClass());
+                method.setAccessible(true);
+                method.invoke(screen, title, body);
+                return true;
+            } catch (Exception ignored) {
+                // Try the approach that worked in your original code
+                for (Method method : screen.getClass().getDeclaredMethods()) {
+                    if (method.getParameterCount() == 2) {
+                        Class<?>[] paramTypes = method.getParameterTypes();
+                        // This pattern matching worked in your original code
+                        if (paramTypes[0].getSimpleName().contains("Component") ||
+                                paramTypes[0].getName().contains("chat") ||
+                                paramTypes[0].getName().contains("text")) {
+                            method.setAccessible(true);
                             try {
-                                Class<?> textComponentClass = Class.forName("net.minecraft.network.chat.TextComponent");
-                                commentTitle = textComponentClass.getConstructor(String.class)
-                                        .newInstance(currentShaderName);
-                                commentBody = textComponentClass.getConstructor(String.class)
-                                        .newInstance(bodyText);
-                            } catch (Exception e4) {
-                                // If all attempts failed, print all exceptions for debugging
-                                System.out.println("Failed to create components using Fabric obfuscated names: " + e.getMessage());
-                                System.out.println("Failed to create components using older Fabric names: " + e2.getMessage());
-                                System.out.println("Failed to create components using Forge names: " + e3.getMessage());
-                                System.out.println("Failed to create components using older Forge names: " + e4.getMessage());
+                                method.invoke(screen, title, body);
+                                return true;
+                            } catch (Exception e) {
+                                // This specific method failed, continue to the next one
                             }
                         }
                     }
                 }
 
-                for (java.lang.reflect.Method method : screen.getClass().getDeclaredMethods()) {
-                    if (method.getName().equals("setShaderPackComment") && method.getParameterCount() == 2) {
+                // Last resort - try any method with 2 parameters
+                for (Method method : screen.getClass().getDeclaredMethods()) {
+                    if (method.getParameterCount() == 2) {
                         method.setAccessible(true);
-                        method.invoke(screen, commentTitle, commentBody);
-                        break;
+                        try {
+                            method.invoke(screen, title, body);
+                            return true;
+                        } catch (Exception e) {
+                            // Continue to the next method
+                        }
                     }
                 }
             }
-        } catch (Exception e) {
-            System.out.println("Error in Euphoria comment handling: " + e.getMessage());
-            e.printStackTrace();
+        } catch (Exception ignored) {
+            // All approaches failed
         }
+
+        return false;
     }
 }
