@@ -14,7 +14,7 @@ import java.util.List;
 public class IrisShaderFolder {
     public static final String MOD_ID = "iris_shader_folder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String VERSION = "1.1.1";
+    public static final String VERSION = "1.2.0";
 
     public static Path shaderpacks = FMLPaths.GAMEDIR.get().resolve("shaderpacks");;
     private static IrisShaderFolder INSTANCE;
