@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -24,6 +25,22 @@ public class IrisLegacyShaderEntryMixin {
 
     @Unique
     private boolean isCurrentlyHovered;
+
+    @Unique
+    private static boolean componentMethodInitialized = false;
+    @Unique
+    private static Method cachedComponentMethod = null;
+    @Unique
+    private static Class<?> cachedComponentClass = null;
+    @Unique
+    private static boolean useConstructor = false;
+    @Unique
+    private static Constructor<?> cachedConstructor = null;
+
+    @Unique
+    private static boolean commentMethodInitialized = false;
+    @Unique
+    private static Method cachedCommentMethod = null;
 
     @ModifyVariable(
         method = {
@@ -116,9 +133,30 @@ public class IrisLegacyShaderEntryMixin {
      */
     @Unique
     private Object[] irisShaderFolder$createTextComponents(String title, String body) {
+        // Check if we already found a working method
+        if (componentMethodInitialized && cachedComponentClass != null) {
+            try {
+                if (useConstructor && cachedConstructor != null) {
+                    // Use cached constructor
+                    Object titleComponent = cachedConstructor.newInstance(title);
+                    Object bodyComponent = cachedConstructor.newInstance(body);
+                    return new Object[]{titleComponent, bodyComponent};
+                } else if (cachedComponentMethod != null) {
+                    // Use cached method
+                    Object titleComponent = cachedComponentMethod.invoke(null, title);
+                    Object bodyComponent = cachedComponentMethod.invoke(null, body);
+                    return new Object[]{titleComponent, bodyComponent};
+                }
+            } catch (Exception ignored) {
+                // Fall back to searching again if cached approach fails
+                componentMethodInitialized = false;
+            }
+        }
+        
+        // If not initialized or cached approach failed, try to find a working method
+        
         // Define known classes and methods
         String[][] approaches = {
-                // className, methodName
                 {"net.minecraft.class_2561", "method_43470"}, // Fabric modern
                 {"net.minecraft.network.chat.Component", "literal"}, // Forge/NeoForge modern
                 {"net.minecraft.network.chat.Component", "m_237113_"}, // 1.20.1 Mojang mappings
@@ -139,6 +177,13 @@ public class IrisLegacyShaderEntryMixin {
                 Method method = componentClass.getMethod(approach[1], String.class);
                 Object titleComponent = method.invoke(null, title);
                 Object bodyComponent = method.invoke(null, body);
+                
+                // Cache the successful method
+                cachedComponentClass = componentClass;
+                cachedComponentMethod = method;
+                useConstructor = false;
+                componentMethodInitialized = true;
+                
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -149,8 +194,16 @@ public class IrisLegacyShaderEntryMixin {
         for (String className : constructorClasses) {
             try {
                 Class<?> componentClass = Class.forName(className);
-                Object titleComponent = componentClass.getConstructor(String.class).newInstance(title);
-                Object bodyComponent = componentClass.getConstructor(String.class).newInstance(body);
+                Constructor<?> constructor = componentClass.getConstructor(String.class);
+                Object titleComponent = constructor.newInstance(title);
+                Object bodyComponent = constructor.newInstance(body);
+                
+                // Cache the successful constructor
+                cachedComponentClass = componentClass;
+                cachedConstructor = constructor;
+                useConstructor = true;
+                componentMethodInitialized = true;
+                
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -205,25 +258,44 @@ public class IrisLegacyShaderEntryMixin {
      */
     @Unique
     private boolean irisShaderFolder$setShaderPackComment(Object screen, Object title, Object body) {
+        // Check if we already found a working method
+        if (commentMethodInitialized && cachedCommentMethod != null) {
+            try {
+                cachedCommentMethod.invoke(screen, title, body);
+                return true;
+            } catch (Exception ignored) {
+                // Fall back to searching again if cached method fails
+                commentMethodInitialized = false;
+            }
+        }
+        
         try {
             // First try with exact method name
             try {
                 Method method = screen.getClass().getDeclaredMethod("setShaderPackComment", title.getClass(), body.getClass());
                 method.setAccessible(true);
                 method.invoke(screen, title, body);
+                
+                // Cache the successful method
+                cachedCommentMethod = method;
+                commentMethodInitialized = true;
+                
                 return true;
             } catch (Exception ignored) {
-                // Try the approach that worked in your original code
                 for (Method method : screen.getClass().getDeclaredMethods()) {
                     if (method.getParameterCount() == 2) {
                         Class<?>[] paramTypes = method.getParameterTypes();
-                        // This pattern matching worked in your original code
                         if (paramTypes[0].getSimpleName().contains("Component") ||
                                 paramTypes[0].getName().contains("chat") ||
                                 paramTypes[0].getName().contains("text")) {
                             method.setAccessible(true);
                             try {
                                 method.invoke(screen, title, body);
+                                
+                                // Cache the successful method
+                                cachedCommentMethod = method;
+                                commentMethodInitialized = true;
+                                
                                 return true;
                             } catch (Exception e) {
                                 // This specific method failed, continue to the next one
@@ -238,6 +310,11 @@ public class IrisLegacyShaderEntryMixin {
                         method.setAccessible(true);
                         try {
                             method.invoke(screen, title, body);
+                            
+                            // Cache the successful method
+                            cachedCommentMethod = method;
+                            commentMethodInitialized = true;
+                            
                             return true;
                         } catch (Exception e) {
                             // Continue to the next method
