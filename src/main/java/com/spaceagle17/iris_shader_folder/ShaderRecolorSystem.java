@@ -9,7 +9,12 @@ import java.util.regex.PatternSyntaxException;
 public class ShaderRecolorSystem {
     private static ShaderRecolorSystem INSTANCE;
     private static final Map<String, String> COLOR_MAP = new HashMap<>();
-    
+        
+    private static final String EUPHORIA_DETECTION = "(EuphoriaPatches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP)";
+    private static final String EUPHORIA_PATTERN = "{.*" + EUPHORIA_DETECTION + ".*}";
+
+    // Define euphoriaRules as a class field
+    private final List<ColorRule> euphoriaRules = new ArrayList<>();
     private final Map<String, String> recolorCache = new HashMap<>();
     private final Set<String> loggedRecolors = new HashSet<>();
     
@@ -43,6 +48,14 @@ public class ShaderRecolorSystem {
     }
     
     private ShaderRecolorSystem() {
+        // Initialize euphoriaRules in the constructor
+        euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("+ EP_{.*}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("EuphoriaPatches_earlyDev{.*}", COLOR_MAP.get("light_purple")));
+        euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
+        euphoriaRules.add(new ColorRule("Outdated", COLOR_MAP.get("red")));
+        
         updateRules();
     }
     
@@ -123,16 +136,88 @@ public class ShaderRecolorSystem {
     }
     
     private void addDefaultEuphoriaRules() {
-        String combinedPattern = "{.*(EuphoriaPatches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP).*}";
-        
-        List<ColorRule> euphoriaRules = new ArrayList<>();
-        euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
-        euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
-        euphoriaRules.add(new ColorRule("EP_{.*}", COLOR_MAP.get("light_purple")));
-        euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
-        
-        recolorRules.add(new RecolorRule(combinedPattern, euphoriaRules));   
+        recolorRules.add(new RecolorRule(EUPHORIA_PATTERN, euphoriaRules));   
         ShaderPatternUtil.logDebug("Added default recolor rule for Euphoria Patches");
+    }
+
+    // Add this special method to handle pre-colored content in the second pass
+    private String applyEuphoriaColorRules(String input) {
+        ShaderPatternUtil.logDebug("Applying Euphoria color rules to pre-colored content: " + input);
+        
+        // Strip color codes for pattern matching
+        String strippedInput = input.replaceAll("§[0-9a-fklmnor]", "");
+        ShaderPatternUtil.logDebug("Stripped input: " + strippedInput);
+        
+        // Process all euphoria rules, don't hardcode specific ones
+        for (ColorRule rule : euphoriaRules) {
+            String patternStr = rule.getPartPattern();
+            String colorCode = rule.getColorCode();
+            
+            // Convert pattern to a proper regex
+            String regex;
+            if (patternStr.contains("{version}") || patternStr.contains("{.*}")) {
+                regex = patternStr
+                    .replace("+ ", "\\+ ")  // Escape plus sign
+                    .replace("{version}", "[0-9.]+")
+                    .replace("{.*}", ".*");
+            } else {
+                // For exact match patterns (like "Outdated")
+                regex = Pattern.quote(patternStr);
+            }
+            
+            // Try to find this pattern in the stripped input
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(strippedInput);
+            
+            if (matcher.find()) {
+                String match = matcher.group();
+                ShaderPatternUtil.logDebug("Found match for rule [" + patternStr + "]: " + match);
+                
+                // Find the position in the original string
+                int startIndex = strippedInput.indexOf(match);
+                if (startIndex >= 0) {
+                    int coloredStartIndex = findColoredPosition(input, strippedInput, startIndex);
+                    int coloredEndIndex = findColoredPosition(input, strippedInput, startIndex + match.length());
+                    
+                    if (coloredStartIndex >= 0 && coloredEndIndex > coloredStartIndex) {
+                        // Apply the rule's color
+                        String before = input.substring(0, coloredStartIndex);
+                        String after = input.substring(coloredEndIndex);
+                        String coloredResult = before + colorCode + match + "§r" + after;
+                        
+                        ShaderPatternUtil.logDebug("Applied rule [" + patternStr + "] with color [" + colorCode + "]:");
+                        ShaderPatternUtil.logDebug("  * Before: " + input);
+                        ShaderPatternUtil.logDebug("  * After:  " + coloredResult);
+                        
+                        // Continue processing with the updated string
+                        input = coloredResult;
+                    }
+                }
+            }
+        }
+        
+        return input;
+    }
+
+    // Helper method to find position in colored string corresponding to position in stripped string
+    private int findColoredPosition(String colored, String stripped, int strippedPos) {
+        if (strippedPos == 0) return 0;
+        if (strippedPos >= stripped.length()) return colored.length();
+        
+        int coloredPos = 0;
+        int strippedIndex = 0;
+        
+        while (strippedIndex < strippedPos && coloredPos < colored.length()) {
+            // Skip color codes
+            if (colored.charAt(coloredPos) == '§' && coloredPos + 1 < colored.length()) {
+                coloredPos += 2; // Skip § and the next character
+            } else {
+                coloredPos++;
+                strippedIndex++;
+            }
+        }
+        
+        return coloredPos;
     }
     
     public String recolorShaderName(String name) {
@@ -141,40 +226,74 @@ public class ShaderRecolorSystem {
             updateRules();
         }
         
-        // Don't return early if recolorRules is empty - we'll ensure it's not empty
-        // by always adding Euphoria rules in updateRules()
-        
         if (recolorCache.containsKey(name)) {
             return recolorCache.get(name);
         }
         
         String result = name;
         boolean modified = false;
+        boolean hasEuphoriaContent = Pattern.compile(EUPHORIA_DETECTION).matcher(name).find();
         
+        ShaderPatternUtil.logDebug("Processing shader name: [" + name + "]");
+        if (hasEuphoriaContent) {
+            ShaderPatternUtil.logDebug("- Contains Euphoria content (matches pattern: " + EUPHORIA_DETECTION + ")");
+        }
+        
+        // First apply ALL rules as normal
+        ShaderPatternUtil.logDebug("--- FIRST PASS: Applying all rules ---");
         for (RecolorRule rule : recolorRules) {
-            // Check if shader name matches the pattern
+            boolean isEuphoriaRule = rule.getShaderPattern().equals(EUPHORIA_PATTERN);
+            
+            ShaderPatternUtil.logDebug("- Checking rule with pattern: [" + rule.getShaderPattern() + 
+                                   (isEuphoriaRule ? "] (Euphoria rule)" : "]"));
+            
             if (ShaderPatternUtil.matchesPattern(name, rule.getShaderPattern())) {
-                // Apply each color rule
+                ShaderPatternUtil.logDebug("  - Rule matches!");
+                
                 for (ColorRule colorRule : rule.getColorRules()) {
                     String before = result;
                     result = applyColorRule(result, colorRule);
+                    
                     if (!before.equals(result)) {
                         modified = true;
+                        ShaderPatternUtil.logDebug("  - Applied color rule [" + colorRule.getPartPattern() + 
+                                              " -> " + colorRule.getColorCode() + "]");
+                        ShaderPatternUtil.logDebug("    * Before: [" + before + "]");
+                        ShaderPatternUtil.logDebug("    * After:  [" + result + "]");
+                    } else {
+                        ShaderPatternUtil.logDebug("  - Color rule [" + colorRule.getPartPattern() + 
+                                              "] had no effect");
                     }
                 }
+            } else {
+                ShaderPatternUtil.logDebug("  - Rule does not match");
+            }
+        }
+        
+        // Then re-apply ONLY the Euphoria rules if needed to ensure they take precedence
+        if (hasEuphoriaContent) {
+            ShaderPatternUtil.logDebug("--- SECOND PASS: Re-applying Euphoria rules ---");
+            
+            // Use special method for pre-colored content
+            String before = result;
+            result = applyEuphoriaColorRules(result);
+            
+            if (!before.equals(result)) {
+                modified = true;
+                ShaderPatternUtil.logDebug("Euphoria rules successfully applied in second pass");
+            } else {
+                ShaderPatternUtil.logDebug("No changes from Euphoria rules in second pass");
             }
         }
         
         // Store in cache
         recolorCache.put(name, result);
         
-        // Log only if modified and we haven't logged this specific recoloring before
-        if (modified && IrisShaderFolder.debugLoggingEnabled) {
-            String cacheKey = name + " -> " + result;
-            if (!loggedRecolors.contains(cacheKey)) {
-                IrisShaderFolder.LOGGER.info("Recolored shader name: Before [" + name + "] -> After [" + result + "]");
-                loggedRecolors.add(cacheKey);
-            }
+        // Log final result
+        if (modified) {
+            ShaderPatternUtil.logDebug("=== FINAL RESULT ===");
+            ShaderPatternUtil.logDebug("- Original: [" + name + "]");
+            ShaderPatternUtil.logDebug("- Recolored: [" + result + "]");
         }
         
         return result;
