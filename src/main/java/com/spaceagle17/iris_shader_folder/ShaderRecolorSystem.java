@@ -34,6 +34,12 @@ public class ShaderRecolorSystem {
         COLOR_MAP.put("light_purple", "§d");
         COLOR_MAP.put("yellow", "§e");
         COLOR_MAP.put("white", "§f");
+        COLOR_MAP.put("bold", "§l");
+        COLOR_MAP.put("italic", "§o");
+        COLOR_MAP.put("underline", "§n");
+        COLOR_MAP.put("strikethrough", "§m");
+        COLOR_MAP.put("reset", "§r");
+        COLOR_MAP.put("obfuscated", "§k");
     }
     
     private ShaderRecolorSystem() {
@@ -61,7 +67,6 @@ public class ShaderRecolorSystem {
         recolorRules.clear();
         recolorCache.clear();
         loggedRecolors.clear();
-        boolean hasUserEuphoriaRules = false;
         euphoriaRulesAdded = false;
         
         // Process user-defined rules
@@ -79,11 +84,6 @@ public class ShaderRecolorSystem {
                 }
                 
                 String shaderPattern = parts[0].trim();
-                
-                // Check if this is a user-defined rule for Euphoria shaders
-                if (shaderPattern.contains("EuphoriaPatches") || shaderPattern.contains("Euphoria-Patches")) {
-                    hasUserEuphoriaRules = true;
-                }
                 
                 // Process color rules (part_pattern [->] color_name)
                 List<ColorRule> colorRulesList = new ArrayList<>();
@@ -116,10 +116,7 @@ public class ShaderRecolorSystem {
             }
         }
         
-        // Always add default Euphoria rules if no user-defined rules exist for them
-        if (!hasUserEuphoriaRules) {
-            addDefaultEuphoriaRules();
-        }
+        addDefaultEuphoriaRules();
         
         // Mark that we've added Euphoria rules
         euphoriaRulesAdded = true;
@@ -132,7 +129,7 @@ public class ShaderRecolorSystem {
         euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("EP_{.*}", COLOR_MAP.get("light_purple")));
-
+        euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
         
         recolorRules.add(new RecolorRule(combinedPattern, euphoriaRules));   
         ShaderPatternUtil.logDebug("Added default recolor rule for Euphoria Patches");

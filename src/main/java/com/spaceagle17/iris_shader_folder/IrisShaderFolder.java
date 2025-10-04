@@ -13,7 +13,7 @@ import java.util.List;
 public class IrisShaderFolder implements ModInitializer {
     public static final String MOD_ID = "iris_shader_folder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String VERSION = "1.2.1";
+    public static final String VERSION = "1.2.2";
 
     public static Path shaderpacks = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
     private static IrisShaderFolder INSTANCE;
@@ -96,6 +96,7 @@ public class IrisShaderFolder implements ModInitializer {
                 "  - color_name: One of the official Minecraft color names or Minecraft color codes:\n" +
                 "    black (§0), dark_blue (§1), dark_green (§2), dark_aqua (§3), dark_red (4), dark_purple (§5), gold (§6), gray (§7),\n" +
                 "    dark_gray (§8), blue (§9), green (§a), aqua (§b), red (§c), light_purple (§d), yellow (§e), white (§f)\n" +
+                "    Additional formatting codes: bold (§l), italic (§o), underline (§n), strikethrough (§m), reset (§r), obfuscated (§k)\n" +
                 "  - The \"part_pattern [->] color_name\" combination can be repeated as often as desired to get multiple colors in the same name\n" +
                 "\n" +
                 "Examples:\n" +
