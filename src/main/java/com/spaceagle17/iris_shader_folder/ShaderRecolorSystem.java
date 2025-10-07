@@ -180,21 +180,42 @@ public class ShaderRecolorSystem {
                     int coloredEndIndex = findColoredPosition(input, strippedInput, startIndex + match.length());
                     
                     if (coloredStartIndex >= 0 && coloredEndIndex > coloredStartIndex) {
-                        // Apply the rule's color
                         String before = input.substring(0, coloredStartIndex);
                         String after = input.substring(coloredEndIndex);
-                        String coloredResult = before + colorCode + match + "§r" + after;
                         
-                        ShaderPatternUtil.logDebug("Applied rule [" + patternStr + "] with color [" + colorCode + "]:");
-                        ShaderPatternUtil.logDebug("  * Before: " + input);
-                        ShaderPatternUtil.logDebug("  * After:  " + coloredResult);
+                        // Check if this section already has color codes
+                        String targetSection = input.substring(coloredStartIndex, coloredEndIndex);
                         
-                        // Continue processing with the updated string
-                        input = coloredResult;
+                        // If section already starts with a color code, remove it
+                        if (targetSection.startsWith("§") && targetSection.length() >= 2) {
+                            // Remove the existing color code(s)
+                            targetSection = targetSection.replaceAll("^(§[0-9a-fklmnor])+", "");
+                            
+                            // Apply the new color
+                            String coloredResult = before + colorCode + targetSection + "§r" + after;
+                            
+                            ShaderPatternUtil.logDebug("Applied rule [" + patternStr + "] with color [" + colorCode + "] (replacing existing color):");
+                            ShaderPatternUtil.logDebug("  * Before: " + input);
+                            ShaderPatternUtil.logDebug("  * After:  " + coloredResult);
+                            
+                            input = coloredResult;
+                        } else {
+                            // No existing color, add new one
+                            String coloredResult = before + colorCode + match + "§r" + after;
+                            
+                            ShaderPatternUtil.logDebug("Applied rule [" + patternStr + "] with color [" + colorCode + "]:");
+                            ShaderPatternUtil.logDebug("  * Before: " + input);
+                            ShaderPatternUtil.logDebug("  * After:  " + coloredResult);
+                            
+                            input = coloredResult;
+                        }
                     }
                 }
             }
         }
+        
+        // Clean up any remaining duplicate color codes
+        input = input.replaceAll("(§[0-9a-fklmnor])\\1+", "$1");
         
         return input;
     }
