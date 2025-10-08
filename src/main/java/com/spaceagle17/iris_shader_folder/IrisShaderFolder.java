@@ -22,6 +22,7 @@ public class IrisShaderFolder implements ModInitializer {
     public static List<String> reorderPatterns = new ArrayList<>();
     public static List<String> recolorPatterns = new ArrayList<>();
     public static List<String> tooltipPatterns = new ArrayList<>();
+    public static List<String> swapNamePatterns = new ArrayList<>();
 
     public static IrisShaderFolder getInstance() {
         return INSTANCE;
@@ -117,7 +118,7 @@ public class IrisShaderFolder implements ModInitializer {
         }
         recolorPatterns = ConfigManager.getSectionItems("recolor");
         
-        // Add new tooltip section
+        // Add tooltip section
         if (ConfigManager.getSectionItems("tooltip").isEmpty()) {
             // If the section doesn't exist or is empty, create it with example content
             String tooltipDescription = 
@@ -142,6 +143,31 @@ public class IrisShaderFolder implements ModInitializer {
             ConfigManager.writeSection("tooltip", defaultContent, tooltipDescription);
         }
         tooltipPatterns = ConfigManager.getSectionItems("tooltip");
+        
+        // Add swap names section
+        if (ConfigManager.getSectionItems("swapNames").isEmpty()) {
+            String swapNamesDescription = 
+                "List of swapNames rules for shaderpacks in the selection menu\n" +
+                "Format: shader_pattern [->] name_to_swap_to [|] time_in_seconds_to_swap [|] time_in_seconds_to_revert\n" +
+                "  - shader_pattern: Matches shaderpack names (exact or with {regex})\n" +
+                "  - name_to_swap_to: Other name to display instead of the original name\n" +
+                "  - time_in_seconds_to_swap: Time in seconds to display the swapped name\n" +
+                "  - time_in_seconds_to_revert: Time in seconds to revert back to the original name\n" +
+                "\n" +
+                "Examples:\n" +
+                "  - {.*Better MC.*} [->] Complementary Shaders + Euphoria Patches [|] 5s [|] 5s\n" +
+                "  - BSL{.*} [->] by Capt Tatsu [|] 10s [|] 3s\n" +
+                "  - test [->] Test shaderpack. [|] 2s [|] 2s\n" +
+                "\n" +
+                "IMPORTANT: Do not use any Color codes in the name_to_swap_to field, as they will not be processed correctly!";
+
+            String defaultContent =
+                "# Add swapNames rules here, one per line\n" +
+                "#{.*Better MC.*} [->] Complementary Shaders + Euphoria Patches [|] 5s [|] 5s";
+
+            ConfigManager.writeSection("swapNames", defaultContent, swapNamesDescription);
+        }
+        swapNamePatterns = ConfigManager.getSectionItems("swapNames");
     }
 
     public List<String> getFilterPatterns() {
@@ -158,6 +184,10 @@ public class IrisShaderFolder implements ModInitializer {
     
     public List<String> getTooltipPatterns() {
         return tooltipPatterns;
+    }
+    
+    public List<String> getSwapNamePatterns() {
+        return swapNamePatterns;
     }
 
     @Override
