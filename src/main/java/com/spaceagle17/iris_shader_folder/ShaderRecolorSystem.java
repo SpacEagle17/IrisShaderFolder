@@ -10,7 +10,7 @@ public class ShaderRecolorSystem {
     private static ShaderRecolorSystem INSTANCE;
     private static final Map<String, String> COLOR_MAP = new HashMap<>();
         
-    private static final String EUPHORIA_DETECTION = "(EuphoriaPatches|Euphoria Patches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP)";
+    private static final String EUPHORIA_DETECTION = "(EuphoriaPatches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP)";
     private static final String EUPHORIA_PATTERN = "{.*" + EUPHORIA_DETECTION + ".*}";
 
     // Define euphoriaRules as a class field
@@ -52,7 +52,6 @@ public class ShaderRecolorSystem {
         euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("+ EP_{.*}", COLOR_MAP.get("light_purple")));
-        euphoriaRules.add(new ColorRule("Euphoria Patches{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("EuphoriaPatches_earlyDev{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
         euphoriaRules.add(new ColorRule("Outdated", COLOR_MAP.get("red")));
