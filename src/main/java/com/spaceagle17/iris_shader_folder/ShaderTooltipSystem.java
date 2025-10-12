@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ShaderTooltipSystem {
+public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
     private static ShaderTooltipSystem INSTANCE;
     
     private final Map<String, String> tooltipCache = new HashMap<>();
@@ -28,6 +28,7 @@ public class ShaderTooltipSystem {
     private boolean rulesInitialized = false;
     
     private ShaderTooltipSystem() {
+        ConfigManager.registerUpdateListener(this);
         updateRules();
     }
     
@@ -77,9 +78,6 @@ public class ShaderTooltipSystem {
     }
     
     public String getTooltip(String shaderName) {
-        ConfigManager.checkForUpdates();
-        updateRules();
-        
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastCacheRefreshTime > CACHE_REFRESH_INTERVAL) {
             clearCache();
@@ -202,5 +200,10 @@ public class ShaderTooltipSystem {
         public String getTooltipText() {
             return tooltipText;
         }
+    }
+
+    @Override
+    public void onConfigUpdate() {
+        updateRules();
     }
 }

@@ -3,11 +3,19 @@ package com.spaceagle17.iris_shader_folder;
 import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.*;
 
-public class ShaderReorderSystem {
+public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
     private static ShaderReorderSystem INSTANCE;
     
+    private List<String> lastReorderPatterns = new ArrayList<>();
+    
     private ShaderReorderSystem() {
-        // Private constructor for singleton
+        ConfigManager.registerUpdateListener(this);
+    }
+    
+    @Override
+    public void onConfigUpdate() {
+        // Clear any cached data or pattern compilations
+        lastReorderPatterns.clear();
     }
     
     public static ShaderReorderSystem getInstance() {

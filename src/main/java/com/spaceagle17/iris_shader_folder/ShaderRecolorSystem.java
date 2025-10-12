@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class ShaderRecolorSystem {
+public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
     private static ShaderRecolorSystem INSTANCE;
     private static final Map<String, String> COLOR_MAP = new HashMap<>();
         
@@ -56,6 +56,8 @@ public class ShaderRecolorSystem {
         euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
         euphoriaRules.add(new ColorRule("Outdated", COLOR_MAP.get("red")));
         
+        // Register as config update listener
+        ConfigManager.registerUpdateListener(this);
         updateRules();
     }
     
@@ -242,11 +244,6 @@ public class ShaderRecolorSystem {
     }
     
     public String recolorShaderName(String name) {
-        // Always check for updates to ensure Euphoria rules are added
-        if (ConfigManager.checkForUpdates() || !euphoriaRulesAdded) {
-            updateRules();
-        }
-        
         if (recolorCache.containsKey(name)) {
             return recolorCache.get(name);
         }
@@ -355,6 +352,12 @@ public class ShaderRecolorSystem {
     public void clearCache() {
         recolorCache.clear();
         loggedRecolors.clear();
+    }
+    
+    // Add implementation of interface method
+    @Override
+    public void onConfigUpdate() {
+        updateRules();
     }
     
     private static class RecolorRule {
