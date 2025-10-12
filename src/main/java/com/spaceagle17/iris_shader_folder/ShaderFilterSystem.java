@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class ShaderFilterSystem {
+public class ShaderFilterSystem implements ConfigManager.ConfigUpdateListener {
     private static ShaderFilterSystem INSTANCE;
     private static final String DEBUG_FILE = "config/iris_shader_filter_debug.txt";
     
@@ -17,6 +17,8 @@ public class ShaderFilterSystem {
     private boolean lastDebugLogSetting = false;
     
     private ShaderFilterSystem() {
+        // Register as a config update listener
+        ConfigManager.registerUpdateListener(this);
         updatePatterns();
     }
     
@@ -25,6 +27,12 @@ public class ShaderFilterSystem {
             INSTANCE = new ShaderFilterSystem();
         }
         return INSTANCE;
+    }
+    
+    @Override
+    public void onConfigUpdate() {
+        // Immediately update patterns when config changes
+        updatePatterns();
     }
     
     private void writeDebug(String message, boolean append) {
@@ -104,11 +112,6 @@ public class ShaderFilterSystem {
     }
     
     public boolean shouldFilterShaderPack(String packName) {
-        // Check for config file changes
-        if (ConfigManager.checkForUpdates()) {
-            updatePatterns();
-        }
-        
         for (Pattern pattern : compiledPatterns) {
             if (pattern.matcher(packName).matches()) {
                 // Only log if debug logging is enabled
