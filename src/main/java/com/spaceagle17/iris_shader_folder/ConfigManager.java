@@ -20,10 +20,45 @@ public class ConfigManager {
     private static FileTime lastModified = null;
     private static boolean watcherActive = false;
     private static ScheduledExecutorService scheduler;
+    
+    // List of listeners to notify when config changes
+    private static final List<ConfigUpdateListener> updateListeners = new ArrayList<>();
 
     private static void debugLog(String message) {
         if (IrisShaderFolder.debugLoggingEnabled) {
             IrisShaderFolder.LOGGER.info("[Config] " + message);
+        }
+    }
+
+    /**
+     * Interface for systems that need to be notified when config changes
+     */
+    public interface ConfigUpdateListener {
+        void onConfigUpdate();
+    }
+    
+    /**
+     * Register a system to be notified of config changes
+     */
+    public static void registerUpdateListener(ConfigUpdateListener listener) {
+        if (!updateListeners.contains(listener)) {
+            updateListeners.add(listener);
+            debugLog("Registered config update listener: " + listener.getClass().getSimpleName());
+        }
+    }
+    
+    /**
+     * Notify all registered systems that config has changed
+     */
+    private static void notifyConfigUpdated() {
+        debugLog("Notifying " + updateListeners.size() + " listeners of config update");
+        for (ConfigUpdateListener listener : updateListeners) {
+            try {
+                listener.onConfigUpdate();
+            } catch (Exception e) {
+                IrisShaderFolder.LOGGER.error("Error notifying listener " + 
+                    listener.getClass().getSimpleName() + " of config update", e);
+            }
         }
     }
 
@@ -42,7 +77,7 @@ public class ConfigManager {
         try (FileWriter writer = new FileWriter(CONFIG_PATH.toString(), false)) {
             writer.write("# Iris Shader Folder - Configuration File\n");
             writer.write("# Made for version " + IrisShaderFolder.VERSION + "\n");
-            writer.write("# Thank you for using Iris Shader Folder\n");
+            writer.write("# Thank you for using Iris Shader Folder - SpacEagle17\n");
         }
     }
 
@@ -277,6 +312,33 @@ public class ConfigManager {
         return items;
     }
     
+    /**
+     * Core method to handle config file changes
+     * This is called by both the scheduled watcher and the immediate check
+     */
+    private static void processConfigUpdate() {
+        try {
+            if (Files.exists(CONFIG_PATH)) {
+                FileTime currentModified = Files.getLastModifiedTime(CONFIG_PATH);
+                if (!currentModified.equals(lastModified)) {
+                    debugLog("Config file changed, reloading settings");
+                    loadProperties();
+                    
+                    IrisShaderFolder instance = IrisShaderFolder.getInstance();
+                    if (instance != null) {
+                        instance.loadConfigOptions();
+                    }
+                    
+                    // Notify all registered listeners
+                    notifyConfigUpdated();
+
+                }
+            }
+        } catch (IOException e) {
+            IrisShaderFolder.LOGGER.error("Error checking for config updates: " + e.getMessage());
+        }
+    }
+    
     public static void startConfigWatcher() {
         if (watcherActive) return;
 
@@ -287,22 +349,7 @@ public class ConfigManager {
             return thread;
         });
 
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                if (Files.exists(CONFIG_PATH)) {
-                    FileTime currentModified = Files.getLastModifiedTime(CONFIG_PATH);
-                    if (lastModified == null || !currentModified.equals(lastModified)) {
-                        debugLog("Config file changed, reloading settings");
-                        loadProperties();
-                        
-                        IrisShaderFolder instance = IrisShaderFolder.getInstance();
-                        if (instance != null) {
-                            instance.loadConfigOptions();
-                        }
-                    }
-                }
-            } catch (IOException ignored) {}
-        }, 10, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(ConfigManager::processConfigUpdate, 1, 1, TimeUnit.SECONDS);
     }
     
     public static void stopConfigWatcher() {
@@ -310,26 +357,5 @@ public class ConfigManager {
             scheduler.shutdown();
             watcherActive = false;
         }
-    }
-
-    public static boolean checkForUpdates() {
-        try {
-            if (Files.exists(CONFIG_PATH)) {
-                FileTime currentModified = Files.getLastModifiedTime(CONFIG_PATH);
-                if (lastModified == null || !currentModified.equals(lastModified)) {
-                    loadProperties();
-                    
-                    IrisShaderFolder instance = IrisShaderFolder.getInstance();
-                    if (instance != null) {
-                        instance.loadConfigOptions();
-                    }
-                    
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error checking for config updates: " + e.getMessage());
-        }
-        return false;
     }
 }
