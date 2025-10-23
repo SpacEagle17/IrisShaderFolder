@@ -53,7 +53,7 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("+ EP_{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("EuphoriaPatches_earlyDev{.*}", COLOR_MAP.get("light_purple")));
-        euphoriaRules.add(new ColorRule("_0EuphoriaPatches Error Shader", COLOR_MAP.get("red")));
+        euphoriaRules.add(new ColorRule("_0EuphoriaPatches{.*}Error{.*}Shader", COLOR_MAP.get("red")));
         euphoriaRules.add(new ColorRule("Outdated", COLOR_MAP.get("red")));
         
         // Register as config update listener
