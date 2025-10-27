@@ -20,7 +20,8 @@ public class IrisLegacyHideShaderPacksMixin {
         method = "refresh()V",
         at = @At(value = "STORE", ordinal = 0),
         ordinal = 0,
-        remap = false
+        remap = false,
+        require = 0
     )
     private Collection<String> filterAndReorderShaderPacks(Collection<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();

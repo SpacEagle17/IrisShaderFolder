@@ -48,12 +48,14 @@ public class IrisModernShaderEntryMixin {
             "render",
             "renderContent",
             "method_25343",
-            "m_6311_"
+            "m_6311_",
+            "func_230432_a_"
         },
         at = @At(value = "STORE", ordinal = 0),
         ordinal = 0,
         name = "name",
-        remap = false
+        remap = false,
+        require = 0
     )
     private String modifyNameVariable(String name) {
         String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(name);
@@ -67,12 +69,14 @@ public class IrisModernShaderEntryMixin {
             "render",
             "renderContent",
             "method_25343",
-            "m_6311_"
+            "m_6311_",
+            "func_230432_a_"
         },
         at = @At("HEAD"),
         ordinal = 0,
         name = "isHovered",
-        remap = false
+        remap = false,
+        require = 0
     )
     private boolean captureIsHovered(boolean isHovered) {
         this.isCurrentlyHovered = isHovered;
@@ -84,9 +88,12 @@ public class IrisModernShaderEntryMixin {
             "render",
             "renderContent",
             "method_25343",
-            "m_6311_"
+            "m_6311_",
+            "func_230432_a_"
         },
-        at = @At("TAIL"))
+        at = @At("TAIL"),
+        require = 0
+    )
     private void afterRenderText(CallbackInfo ci) {
         try {
             if (!isCurrentlyHovered || currentShaderName == null) {
