@@ -85,11 +85,11 @@ public class IrisModernShaderEntryMixin {
     
     @Inject(
         method = {
-                "render",
-                "renderContent",
-                "method_25343",
-                "m_6311_",
-                "func_230432_a_"
+            "render",
+            "renderContent",
+            "method_25343",
+            "m_6311_",
+            "func_230432_a_"
         },
         at = @At("TAIL"),
         require = 0

@@ -9,9 +9,7 @@
     "legacy.IrisLegacyShaderEntryMixin",
     "modern.IrisModernHideShaderPacksMixin",
     "modern.IrisModernOptionMenuConstructorMixin",
-    "modern.IrisModernShaderEntryMixin",
-    "legacy.IrisLegacyShaderPackScreenMixin",
-    "modern.IrisModernShaderPackScreenMixin"
+    "modern.IrisModernShaderEntryMixin"
   ],
   "client": [
     "legacy.IrisLegacyShaderPackScreenMixin",
