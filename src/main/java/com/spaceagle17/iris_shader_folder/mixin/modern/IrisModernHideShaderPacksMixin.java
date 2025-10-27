@@ -21,7 +21,8 @@ public class IrisModernHideShaderPacksMixin {
         method = "refresh()V",
         at = @At(value = "STORE", ordinal = 0),
         ordinal = 0,
-        remap = false
+        remap = false,
+        require = 0
     )
     private List<String> filterAndReorderShaderPacks(List<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();

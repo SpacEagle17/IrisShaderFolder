@@ -28,9 +28,6 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
                 mixinClassName.contains("IrisLegacyShaderEntryMixin") ||
                 mixinClassName.contains("IrisLegacyOptionMenuConstructorMixin") ||
                 mixinClassName.contains("IrisLegacyShaderPackScreenMixin")) {
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.info("Checking for legacy Iris class: " + LEGACY_IRIS_CLASS);
-            }
             return checkClassExists(LEGACY_IRIS_CLASS);
         }
 
@@ -38,9 +35,6 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
                 mixinClassName.contains("IrisModernShaderEntryMixin") ||
                 mixinClassName.contains("IrisModernOptionMenuConstructorMixin") ||
                 mixinClassName.contains("IrisModernShaderPackScreenMixin")) {
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.info("Checking for modern Iris class: " + MODERN_IRIS_CLASS);
-            }
             return checkClassExists(MODERN_IRIS_CLASS);
         }
 
@@ -50,15 +44,7 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
 
     private boolean checkClassExists(String className) {
         String resourceName = className.replace('.', '/') + ".class";
-        boolean isPresent = getClass().getClassLoader().getResource(resourceName) != null;
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            if (isPresent) {
-                IrisShaderFolder.LOGGER.info("Found class: " + className);
-            } else {
-                IrisShaderFolder.LOGGER.info("Class not found: " + className);
-            }
-        }
-        return isPresent;
+        return getClass().getClassLoader().getResource(resourceName) != null;
     }
 
     @Override
