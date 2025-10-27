@@ -2,8 +2,8 @@ package com.spaceagle17.iris_shader_folder;
 
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,7 +13,7 @@ import java.util.List;
 @Mod("iris_shader_folder")
 public class IrisShaderFolder {
     public static final String MOD_ID = "iris_shader_folder";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final Logger LOGGER = LogManager.getLogger();
     public static final String VERSION = "1.2.5";
 
     public static Path shaderpacks = FMLPaths.GAMEDIR.get().resolve("shaderpacks");

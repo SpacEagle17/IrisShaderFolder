@@ -23,7 +23,8 @@ public class IrisLegacyOptionMenuConstructorMixin {
             target = "Lnet/coderbot/iris/Iris;getCurrentPackName()Ljava/lang/String;",
             remap = false
         ),
-        remap = false
+        remap = false,
+        require = 0
     )
     private static String modifyPackNameValue(String originalPackName) {
         String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(originalPackName);
