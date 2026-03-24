@@ -23,10 +23,10 @@ public class IrisModernShaderEntryMixin {
 
     @Unique
     private String currentShaderNameRecolored;
-    
+
     @Unique
     private boolean isCurrentlyHovered;
-    
+
     @Unique
     private static boolean componentMethodInitialized = false;
     @Unique
@@ -42,14 +42,15 @@ public class IrisModernShaderEntryMixin {
     private static boolean commentMethodInitialized = false;
     @Unique
     private static Method cachedCommentMethod = null;
-    
+
     @ModifyVariable(
         method = {
             "render",
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At(value = "STORE", ordinal = 0),
         ordinal = 0,
@@ -63,14 +64,15 @@ public class IrisModernShaderEntryMixin {
         this.currentShaderNameRecolored = recoloredName;
         return recoloredName;
     }
-    
+
     @ModifyVariable(
         method = {
             "render",
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At("HEAD"),
         ordinal = 0,
@@ -82,14 +84,15 @@ public class IrisModernShaderEntryMixin {
         this.isCurrentlyHovered = isHovered;
         return isHovered;
     }
-    
+
     @Inject(
         method = {
             "render",
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At("TAIL"),
         require = 0
@@ -102,7 +105,7 @@ public class IrisModernShaderEntryMixin {
 
             // Check if we have a tooltip for this shader
             String tooltip = ShaderTooltipSystem.getInstance().getTooltip(currentShaderName);
-            
+
             // Only proceed if we have a tooltip
             if (tooltip != null && !tooltip.isEmpty()) {
                 // Get the screen object through reflection
@@ -160,9 +163,9 @@ public class IrisModernShaderEntryMixin {
                 componentMethodInitialized = false;
             }
         }
-        
+
         // If not initialized or cached approach failed, try to find a working method
-        
+
         // Define known classes and methods
         String[][] approaches = {
                 {"net.minecraft.class_2561", "method_43470"}, // Fabric modern
@@ -185,13 +188,13 @@ public class IrisModernShaderEntryMixin {
                 Method method = componentClass.getMethod(approach[1], String.class);
                 Object titleComponent = method.invoke(null, title);
                 Object bodyComponent = method.invoke(null, body);
-                
+
                 // Cache the successful method
                 cachedComponentClass = componentClass;
                 cachedComponentMethod = method;
                 useConstructor = false;
                 componentMethodInitialized = true;
-                
+
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -205,13 +208,13 @@ public class IrisModernShaderEntryMixin {
                 Constructor<?> constructor = componentClass.getConstructor(String.class);
                 Object titleComponent = constructor.newInstance(title);
                 Object bodyComponent = constructor.newInstance(body);
-                
+
                 // Cache the successful constructor
                 cachedComponentClass = componentClass;
                 cachedConstructor = constructor;
                 useConstructor = true;
                 componentMethodInitialized = true;
-                
+
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -271,69 +274,52 @@ public class IrisModernShaderEntryMixin {
             try {
                 cachedCommentMethod.invoke(screen, title, body);
                 return true;
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
                 // Fall back to searching again if cached method fails
                 commentMethodInitialized = false;
             }
         }
-        
+
         try {
-            // First try with exact method name
-            try {
-                Method method = screen.getClass().getDeclaredMethod("setShaderPackComment", title.getClass(), body.getClass());
+            // Try exact runtime types first
+            Method direct = screen.getClass().getDeclaredMethod("setShaderPackComment", title.getClass(), body.getClass());
+            direct.setAccessible(true);
+            direct.invoke(screen, title, body);
+
+            cachedCommentMethod = direct;
+            commentMethodInitialized = true;
+            return true;
+        } catch (Throwable ignored) {
+            // Try hierarchy-based lookup below
+        }
+
+        try {
+            Method method = irisShaderFolder$findCompatibleCommentMethod(screen.getClass(), title.getClass(), body.getClass());
+            if (method != null) {
                 method.setAccessible(true);
                 method.invoke(screen, title, body);
-                
-                // Cache the successful method
                 cachedCommentMethod = method;
                 commentMethodInitialized = true;
-                
                 return true;
-            } catch (Exception ignored) {
-                for (Method method : screen.getClass().getDeclaredMethods()) {
-                    if (method.getParameterCount() == 2) {
-                        Class<?>[] paramTypes = method.getParameterTypes();
-                        if (paramTypes[0].getSimpleName().contains("Component") ||
-                                paramTypes[0].getName().contains("chat") ||
-                                paramTypes[0].getName().contains("text")) {
-                            method.setAccessible(true);
-                            try {
-                                method.invoke(screen, title, body);
-                                
-                                // Cache the successful method
-                                cachedCommentMethod = method;
-                                commentMethodInitialized = true;
-                                
-                                return true;
-                            } catch (Exception e) {
-                                // This specific method failed, continue to the next one
-                            }
-                        }
-                    }
-                }
-
-                // Last resort - try any method with 2 parameters
-                for (Method method : screen.getClass().getDeclaredMethods()) {
-                    if (method.getParameterCount() == 2) {
-                        method.setAccessible(true);
-                        try {
-                            method.invoke(screen, title, body);
-                            
-                            // Cache the successful method
-                            cachedCommentMethod = method;
-                            commentMethodInitialized = true;
-                            
-                            return true;
-                        } catch (Exception e) {
-                            // Continue to the next method
-                        }
-                    }
-                }
             }
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
             // All approaches failed
         }
 
         return false;
+    }
+
+    @Unique
+    private Method irisShaderFolder$findCompatibleCommentMethod(Class<?> screenClass, Class<?> titleClass, Class<?> bodyClass) {
+        for (Class<?> titleType = titleClass; titleType != null; titleType = titleType.getSuperclass()) {
+            for (Class<?> bodyType = bodyClass; bodyType != null; bodyType = bodyType.getSuperclass()) {
+                try {
+                    return screenClass.getDeclaredMethod("setShaderPackComment", titleType, bodyType);
+                } catch (Throwable ignored) {
+                    // Keep trying parent types
+                }
+            }
+        }
+        return null;
     }
 }
