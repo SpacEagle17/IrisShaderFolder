@@ -20,6 +20,7 @@ public class IrisShaderFolder implements ModInitializer {
     public static boolean debugLoggingEnabled = false;
     public static List<String> filterPatterns = new ArrayList<>();
     public static List<String> reorderPatterns = new ArrayList<>();
+    public static List<String> renamePatterns = new ArrayList<>();
     public static List<String> recolorPatterns = new ArrayList<>();
     public static List<String> tooltipPatterns = new ArrayList<>();
 
@@ -81,6 +82,40 @@ public class IrisShaderFolder implements ModInitializer {
             ConfigManager.writeSection("reorder", defaultContent, reorderDescription);
         }
         reorderPatterns = ConfigManager.getSectionItems("reorder");
+
+        if (ConfigManager.getSectionItems("rename").isEmpty()) {
+            // If the section doesn't exist or is empty, create it with example content
+            String renameDescription =
+                "List of renaming rules for shaderpack names in the selection menu\n" +
+                "Each rule renames one or more parts of a matched shader name.\n" +
+                "{version} matches any version number pattern like 1.2.3 or 4.5\n" +
+                "Other {xyz} are treated as regex patterns (very powerful, be careful!)\n" +
+                "Format: shader_pattern [|] part_pattern [->] replacement [|] part_pattern2 [->] replacement2 ....\n" +
+                "  - shader_pattern: Selects which shader names the rule applies to (exact or with {regex})\n" +
+                "      - Use {all} to apply this rule to all shaders\n" +
+                "  - part_pattern: Selects the part to replace (exact or with {regex})\n" +
+                "      - Use {all} to replace the entire shader name\n" +
+                "  - replacement: The replacement text\n" +
+                "      - Use { } to insert a whitespace character\n" +
+                "  - The \"part_pattern [->] replacement\" combination can be repeated as often as desired\n" +
+                "\n" +
+                "Examples:\n" +
+                "  - {all} [|] _ [->] { }\n" +
+                "      Replaces underscores with spaces in all shader names.\n" +
+                "  - Complementary{.*} [|] Complementary [->] Comp\n" +
+                "      Replaces \"Complementary\" with \"Comp\" in matching shader names.\n" +
+                "  - test [|] {all} [->] Test Shader\n" +
+                "      Replaces the entire name \"test\" with \"Test Shader\".\n";
+
+            String defaultContent =
+                "# Add rename rules here, one per line\n" +
+                "# {all} [|] _ [->] { }\n" +
+                "# Complementary{.*} [|] Complementary [->] Comp\n" +
+                "# test [|] {all} [->] Test Shader";
+
+            ConfigManager.writeSection("rename", defaultContent, renameDescription);
+        }
+        renamePatterns = ConfigManager.getSectionItems("rename");
 
         if (ConfigManager.getSectionItems("recolor").isEmpty()) {
             // If the section doesn't exist or is empty, create it with example content
@@ -150,6 +185,10 @@ public class IrisShaderFolder implements ModInitializer {
 
     public List<String> getReorderPatterns() {
         return reorderPatterns;
+    }
+
+    public List<String> getRenamePatterns() {
+        return renamePatterns;
     }
 
     public List<String> getRecolorPatterns() {
