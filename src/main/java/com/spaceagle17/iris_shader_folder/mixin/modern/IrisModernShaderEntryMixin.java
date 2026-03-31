@@ -59,7 +59,7 @@ public class IrisModernShaderEntryMixin {
         require = 0
     )
     private String modifyNameVariable(String name) {
-        String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(name);
+        String recoloredName = ShaderName.renameShader(originalPackName);
         this.currentShaderName = name;
         this.currentShaderNameRecolored = recoloredName;
         return recoloredName;

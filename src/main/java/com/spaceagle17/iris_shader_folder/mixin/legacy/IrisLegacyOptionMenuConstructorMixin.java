@@ -1,8 +1,7 @@
 package com.spaceagle17.iris_shader_folder.mixin.legacy;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
+import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -27,10 +26,6 @@ public class IrisLegacyOptionMenuConstructorMixin {
         require = 0
     )
     private static String modifyPackNameValue(String originalPackName) {
-        String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(originalPackName);
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            System.out.println("[IrisShaderFolder] Recolored pack name: " + originalPackName + " -> " + recoloredName);
-        }
-        return recoloredName;
+        return ShaderName.renameShader(originalPackName);
     }
 }

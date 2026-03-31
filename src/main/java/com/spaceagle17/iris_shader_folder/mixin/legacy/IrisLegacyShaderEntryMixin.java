@@ -62,7 +62,7 @@ public class IrisLegacyShaderEntryMixin {
         require = 0
     )
     private String modifyNameVariable(String name) {
-        String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(name);
+        String recoloredName = ShaderName.renameShader(originalPackName);
         this.currentShaderName = name;
         this.currentShaderNameRecolored = recoloredName;
         return recoloredName;
@@ -106,7 +106,7 @@ public class IrisLegacyShaderEntryMixin {
 
             // Check if we have a tooltip for this shader
             String tooltip = ShaderTooltipSystem.getInstance().getTooltip(currentShaderName);
-            
+
             // Only proceed if we have a tooltip
             if (tooltip != null && !tooltip.isEmpty()) {
                 // Get the screen object through reflection
@@ -164,9 +164,9 @@ public class IrisLegacyShaderEntryMixin {
                 componentMethodInitialized = false;
             }
         }
-        
+
         // If not initialized or cached approach failed, try to find a working method
-        
+
         // Define known classes and methods
         String[][] approaches = {
                 {"net.minecraft.class_2561", "method_43470"}, // Fabric modern
@@ -189,13 +189,13 @@ public class IrisLegacyShaderEntryMixin {
                 Method method = componentClass.getMethod(approach[1], String.class);
                 Object titleComponent = method.invoke(null, title);
                 Object bodyComponent = method.invoke(null, body);
-                
+
                 // Cache the successful method
                 cachedComponentClass = componentClass;
                 cachedComponentMethod = method;
                 useConstructor = false;
                 componentMethodInitialized = true;
-                
+
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -209,13 +209,13 @@ public class IrisLegacyShaderEntryMixin {
                 Constructor<?> constructor = componentClass.getConstructor(String.class);
                 Object titleComponent = constructor.newInstance(title);
                 Object bodyComponent = constructor.newInstance(body);
-                
+
                 // Cache the successful constructor
                 cachedComponentClass = componentClass;
                 cachedConstructor = constructor;
                 useConstructor = true;
                 componentMethodInitialized = true;
-                
+
                 return new Object[]{titleComponent, bodyComponent};
             } catch (Exception ignored) {
                 // Try next approach
@@ -280,18 +280,18 @@ public class IrisLegacyShaderEntryMixin {
                 commentMethodInitialized = false;
             }
         }
-        
+
         try {
             // First try with exact method name
             try {
                 Method method = screen.getClass().getDeclaredMethod("setShaderPackComment", title.getClass(), body.getClass());
                 method.setAccessible(true);
                 method.invoke(screen, title, body);
-                
+
                 // Cache the successful method
                 cachedCommentMethod = method;
                 commentMethodInitialized = true;
-                
+
                 return true;
             } catch (Exception ignored) {
                 for (Method method : screen.getClass().getDeclaredMethods()) {
@@ -303,11 +303,11 @@ public class IrisLegacyShaderEntryMixin {
                             method.setAccessible(true);
                             try {
                                 method.invoke(screen, title, body);
-                                
+
                                 // Cache the successful method
                                 cachedCommentMethod = method;
                                 commentMethodInitialized = true;
-                                
+
                                 return true;
                             } catch (Exception e) {
                                 // This specific method failed, continue to the next one
@@ -322,11 +322,11 @@ public class IrisLegacyShaderEntryMixin {
                         method.setAccessible(true);
                         try {
                             method.invoke(screen, title, body);
-                            
+
                             // Cache the successful method
                             cachedCommentMethod = method;
                             commentMethodInitialized = true;
-                            
+
                             return true;
                         } catch (Exception e) {
                             // Continue to the next method
