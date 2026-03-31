@@ -1,7 +1,7 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
-issueTrackerURL="https://euphoriapatches.com/discord" 
+issueTrackerURL="https://euphoriapatches.com/discord"
 
 [[mods]]
 modId="${mod_id}"
@@ -25,3 +25,10 @@ mandatory=true
 versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="oculus"
+mandatory=true
+versionRange="[0.0,)"
+ordering="NONE"
+side="CLIENT"
