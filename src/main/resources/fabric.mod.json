@@ -17,6 +17,7 @@
   },
   "mixins": ["iris_shader_folder.mixins.json"],
   "depends": {
-    "iris": "*"
+    "iris": "*",
+    "minecraft": ">=1.16"
   }
 }
