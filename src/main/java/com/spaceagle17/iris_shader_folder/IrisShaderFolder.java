@@ -13,7 +13,7 @@ import java.util.List;
 public class IrisShaderFolder implements ModInitializer {
     public static final String MOD_ID = "iris_shader_folder";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String VERSION = "1.2.5";
+    public static final String VERSION = "1.2.6";
 
     public static Path shaderpacks = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
     private static IrisShaderFolder INSTANCE;
@@ -84,7 +84,7 @@ public class IrisShaderFolder implements ModInitializer {
 
         if (ConfigManager.getSectionItems("recolor").isEmpty()) {
             // If the section doesn't exist or is empty, create it with example content
-            String recolorDescription = 
+            String recolorDescription =
                 "List of recoloring rules for shaderpack names in the selection menu\n" +
                 "Each rule recolors either a specific part of the shaderpack name or the entire name.\n" +
                 "{version} matches any version number pattern like 1.2.3 or 4.5\n" +
@@ -116,11 +116,11 @@ public class IrisShaderFolder implements ModInitializer {
             ConfigManager.writeSection("recolor", defaultContent, recolorDescription);
         }
         recolorPatterns = ConfigManager.getSectionItems("recolor");
-        
+
         // Add new tooltip section
         if (ConfigManager.getSectionItems("tooltip").isEmpty()) {
             // If the section doesn't exist or is empty, create it with example content
-            String tooltipDescription = 
+            String tooltipDescription =
                 "List of tooltip rules for shaderpacks in the selection menu\n" +
                 "Format: shader_pattern [|] tooltip_text\n" +
                 "  - shader_pattern: Matches shaderpack names (exact or with {regex})\n" +
@@ -155,7 +155,7 @@ public class IrisShaderFolder implements ModInitializer {
     public List<String> getRecolorPatterns() {
         return recolorPatterns;
     }
-    
+
     public List<String> getTooltipPatterns() {
         return tooltipPatterns;
     }
