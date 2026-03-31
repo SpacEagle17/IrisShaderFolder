@@ -19,7 +19,7 @@ public class IrisModernOptionMenuConstructorMixin {
     @ModifyExpressionValue(
         method = "lambda$static$0(Lnet/irisshaders/iris/shaderpack/option/menu/OptionMenuMainElementScreen;)Lnet/irisshaders/iris/gui/element/screen/ElementWidgetScreenData;",
         at = @At(
-            value = "INVOKE", 
+            value = "INVOKE",
             target = "Lnet/irisshaders/iris/Iris;getCurrentPackName()Ljava/lang/String;",
             remap = false
         ),
@@ -27,10 +27,6 @@ public class IrisModernOptionMenuConstructorMixin {
         require = 0
     )
     private static String modifyPackNameValue(String originalPackName) {
-        String recoloredName = ShaderRecolorSystem.getInstance().recolorShaderName(originalPackName);
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            System.out.println("[IrisShaderFolder] Recolored pack name: " + originalPackName + " -> " + recoloredName);
-        }
-        return recoloredName;
+        return ShaderName.renameShader(originalPackName);
     }
 }
