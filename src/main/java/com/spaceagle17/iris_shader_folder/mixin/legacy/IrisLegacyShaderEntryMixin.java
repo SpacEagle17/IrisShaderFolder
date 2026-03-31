@@ -1,8 +1,8 @@
 package com.spaceagle17.iris_shader_folder.mixin.legacy;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
 import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -62,7 +62,7 @@ public class IrisLegacyShaderEntryMixin {
         require = 0
     )
     private String modifyNameVariable(String name) {
-        String recoloredName = ShaderName.renameShader(originalPackName);
+        String recoloredName = ShaderName.renameShader(name);
         this.currentShaderName = name;
         this.currentShaderNameRecolored = recoloredName;
         return recoloredName;
