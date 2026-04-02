@@ -16,11 +16,11 @@
 <br>
 </center>
 
-A mod that lets you hide, filter, recolor, add tooltips, and reorder specific shader packs in the Iris/Oculus shaders menu using flexible patterns.
+A mod that lets you hide, filter, recolor, rename, add tooltips, and reorder specific shader packs in the Iris/Oculus shaders menu using flexible patterns.
 ## This mod does <ins style="color:red;">NOT</ins> load shaders! It only organizes and customizes the shader selection menu.
 
 ## 📝 Why use this mod?
-Tired of scrolling through a messy shader list? Want to hide test packs, old versions, recolor names, add tooltips, or put your favorites at the top?
+Tired of scrolling through a messy shader list? Want to hide test packs, old versions, recolor names, add tooltips, or put your favorites at the top? Or maybe even remove all underscores?
 Iris Shader Folder Mod lets you filter out unwanted shader packs, organize the menu, recolor names, and add custom tooltips making your shader selection fast, clean, and personal.
 
 ## Features
