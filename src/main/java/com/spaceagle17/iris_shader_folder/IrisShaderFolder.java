@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Mod("iris_shader_folder")
 public class IrisShaderFolder {
@@ -224,7 +225,7 @@ public class IrisShaderFolder {
 
     public static boolean isSpacEagle() {
         try {
-            boolean containsSpacEagle = shaderpacks.toString().contains("SpacEagle");
+            boolean containsSpacEagle = shaderpacks.toString().toLowerCase(Locale.ROOT).contains("spaceagle");
             Path euphoriaFolder = shaderpacks.resolve("Euphoria-Patches");
             boolean hasEuphoriaFolder = Files.exists(euphoriaFolder) && Files.isDirectory(euphoriaFolder);
             return containsSpacEagle && hasEuphoriaFolder;
