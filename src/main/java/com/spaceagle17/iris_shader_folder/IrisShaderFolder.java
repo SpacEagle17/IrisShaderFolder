@@ -66,11 +66,24 @@ public class IrisShaderFolder {
             String reorderDescription =
                 "List of shaderpacks to reorder in the shaderpacks selection menu, one per line\n" +
                 "The position is determined by line order (first line = position 1, etc.)\n" +
+                "\n" +
+                "PRIORITY RULES:\n" +
+                "  - If a shaderpack matches multiple patterns, the FIRST matching pattern wins\n" +
+                "  - Subsequent patterns will skip shaders already matched by earlier patterns\n" +
+                "  - Prefix a pattern with [!] to force it to match even if it was already matched by earlier rules\n" +
+                "\n" +
                 "Examples:\n" +
                 "  - First position: {.*}EuphoriaPatches{.*}\n" +
                 "  - Second position: Complementary{.*}_r{version}\n" +
                 "  - Third position: BSL{.*}\n" +
-                "If multiple shaderpacks match a pattern, they are inserted at the given position, sorted alphabetically.\n" +
+                "  - Force to position: [!]Outdated{.*}\n" +
+                "\n" +
+                "Example with [!]:\n" +
+                "  Complementary{.*}    - Matches Complementary at position 0\n" +
+                "  {.*dev.*}            - Matches shaders containing 'dev' at position 1 (skips already matched)\n" +
+                "  {.*}                 - Matches all at position 2 (skips already matched)\n" +
+                "  [!]Outdated{.*}      - Forces Outdated shaders to position 3 (re-matches even if already matched)\n" +
+                "\n" +
                 "{version} matches any version number pattern like 1.2.3 or 4.5\n" +
                 "Other {xyz} are treated as regex patterns (very powerful, be careful!)\n" +
                 ".zip extensions are handled automatically\n";
@@ -79,7 +92,8 @@ public class IrisShaderFolder {
                 "# Add reorder patterns here, one per line\n" +
                 "# {.*}EuphoriaPatches{.*}\n" +
                 "# Complementary{.*}_r{version}\n" +
-                "# BSL{.*}";
+                "# BSL{.*}\n" +
+                "# [!]Outdated{.*}";
 
             ConfigManager.writeSection("reorder", defaultContent, reorderDescription);
         }
