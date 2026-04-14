@@ -64,11 +64,14 @@ reorderStart:[
 {.*}EuphoriaPatches{.*}
 Complementary{.*}_r{version}
 BSL{.*}
+[!]Outdated{.*}
 ]:reorderEnd
 ```
 
 - The order of lines determines the order in the menu (top line = first position, etc.).
-- If multiple shaderpacks match a pattern, they are inserted at the given position, sorted alphabetically.
+- If a shaderpack matches multiple patterns, the **first matching pattern wins** and subsequent patterns skip that shader.
+- Use the `[!]` prefix to force a pattern to match even if the shader was already matched by a previous rule.
+  - Example: `[!]Outdated{.*}` will move any shader with "Outdated" in its name to position 4, even if it was already matched by an earlier pattern.
 - Patterns support `{version}` and custom regex in braces.
 - Patterns match both folders and .zip shader packs.
 
