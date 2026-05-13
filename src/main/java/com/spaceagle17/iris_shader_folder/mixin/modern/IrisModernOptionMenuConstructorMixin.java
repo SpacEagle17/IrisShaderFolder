@@ -1,7 +1,6 @@
 package com.spaceagle17.iris_shader_folder.mixin.modern;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
