@@ -181,6 +181,7 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
 
         String result = name;
         boolean modified = false;
+        String[] colorByIndex = new String[name.length()];
 
         ShaderPatternUtil.logDebug("Processing shader name: [" + name + "]");
 
@@ -196,15 +197,12 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
                 ShaderPatternUtil.logDebug("  - Rule matches!");
 
                 for (ColorRule colorRule : rule.getColorRules()) {
-                    String before = result;
-                    result = applyColorRule(result, colorRule);
+                    boolean ruleApplied = applyColorRule(name, colorByIndex, colorRule);
 
-                    if (!before.equals(result)) {
+                    if (ruleApplied) {
                         modified = true;
                         ShaderPatternUtil.logDebug("  - Applied color rule [" + colorRule.getPartPattern() +
                                               " -> " + colorRule.getColorCode() + "]");
-                        ShaderPatternUtil.logDebug("    * Before: [" + before + "]");
-                        ShaderPatternUtil.logDebug("    * After:  [" + result + "]");
                     } else {
                         ShaderPatternUtil.logDebug("  - Color rule [" + colorRule.getPartPattern() +
                                               "] had no effect");
@@ -214,6 +212,8 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
                 ShaderPatternUtil.logDebug("  - Rule does not match");
             }
         }
+
+        result = buildColoredResult(name, colorByIndex);
 
         // Store in cache
         recolorCache.put(name, result);
@@ -228,13 +228,18 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         return result;
     }
 
-    private String applyColorRule(String input, ColorRule colorRule) {
+    private boolean applyColorRule(String input, String[] colorByIndex, ColorRule colorRule) {
         String pattern = colorRule.getPartPattern();
         String colorCode = colorRule.getColorCode();
 
         // Special case for {all} pattern
         if (pattern.equals("{all}")) {
-            return colorCode + input + "§r";
+            boolean applied = false;
+            for (int i = 0; i < colorByIndex.length; i++) {
+                colorByIndex[i] = colorCode;
+                applied = true;
+            }
+            return applied;
         }
 
         try {
@@ -245,19 +250,49 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
             Pattern compiledPattern = Pattern.compile(regexPattern);
             Matcher matcher = compiledPattern.matcher(input);
 
-            // Replace matching parts with colored versions
-            StringBuffer result = new StringBuffer();
+            boolean applied = false;
             while (matcher.find()) {
-                String replacement = colorCode + matcher.group() + "§r";
-                matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
-            }
-            matcher.appendTail(result);
+                if (matcher.start() == matcher.end()) {
+                    continue;
+                }
 
-            return result.toString();
+                for (int i = matcher.start(); i < matcher.end(); i++) {
+                    colorByIndex[i] = colorCode;
+                }
+                applied = true;
+            }
+            return applied;
         } catch (PatternSyntaxException e) {
             IrisShaderFolder.LOGGER.error("Invalid pattern in color rule: " + pattern, e);
-            return input;
+            return false;
         }
+    }
+
+    private String buildColoredResult(String input, String[] colorByIndex) {
+        StringBuilder result = new StringBuilder(input.length() + 16);
+        String currentColorCode = null;
+
+        for (int i = 0; i < input.length(); i++) {
+            String nextColorCode = colorByIndex[i];
+
+            if (!Objects.equals(currentColorCode, nextColorCode)) {
+                if (currentColorCode != null) {
+                    result.append("§r");
+                }
+                if (nextColorCode != null) {
+                    result.append(nextColorCode);
+                }
+                currentColorCode = nextColorCode;
+            }
+
+            result.append(input.charAt(i));
+        }
+
+        if (currentColorCode != null) {
+            result.append("§r");
+        }
+
+        return result.toString();
     }
 
     public void clearCache() {

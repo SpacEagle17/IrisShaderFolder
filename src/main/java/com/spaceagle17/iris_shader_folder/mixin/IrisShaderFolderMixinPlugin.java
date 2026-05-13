@@ -1,6 +1,5 @@
 package com.spaceagle17.iris_shader_folder.mixin;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
