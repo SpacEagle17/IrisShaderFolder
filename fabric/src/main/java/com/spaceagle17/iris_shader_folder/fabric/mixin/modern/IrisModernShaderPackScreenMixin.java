@@ -1,5 +1,6 @@
 package com.spaceagle17.iris_shader_folder.fabric.mixin.modern;
 
+import com.spaceagle17.iris_shader_folder.fabric.IIrisShaderPackScreen;
 import org.spongepowered.asm.mixin.*;
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.Optional;
 @Pseudo
 @Debug(export = true)
 @Mixin(targets = "net.irisshaders.iris.gui.screen.ShaderPackScreen", remap = false)
-public abstract class IrisModernShaderPackScreenMixin {
+public abstract class IrisModernShaderPackScreenMixin implements IIrisShaderPackScreen {
     @Shadow private Optional<?> hoveredElementCommentTitle;
     @Shadow private List<?> hoveredElementCommentBody;
     @Shadow private int hoveredElementCommentTimer;
@@ -22,6 +23,7 @@ public abstract class IrisModernShaderPackScreenMixin {
     @Unique private static final String[] FONT_SPLIT_METHODS = {"split", "method_1728"};
 
     @Unique
+    @Override
     public void setShaderPackComment(Object title, Object body) {
         if (title == null || body == null) {
             return;

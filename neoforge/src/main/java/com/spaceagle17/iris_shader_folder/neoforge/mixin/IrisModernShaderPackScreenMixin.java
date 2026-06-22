@@ -1,5 +1,6 @@
-package com.spaceagle17.iris_shader_folder.neoforge.mixin.modern;
+package com.spaceagle17.iris_shader_folder.neoforge.mixin;
 
+import com.spaceagle17.iris_shader_folder.neoforge.IIrisShaderPackScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -12,16 +13,17 @@ import java.util.Optional;
 @Pseudo
 @Debug(export = true)
 @Mixin(targets = "net.irisshaders.iris.gui.screen.ShaderPackScreen", remap = false)
-public class IrisModernShaderPackScreenMixin extends Screen {
+public class IrisModernShaderPackScreenMixin extends Screen implements IIrisShaderPackScreen {
     @Shadow private Optional<Component> hoveredElementCommentTitle;
     @Shadow private List<FormattedCharSequence> hoveredElementCommentBody;
     @Shadow private int hoveredElementCommentTimer;
-    
+
     protected IrisModernShaderPackScreenMixin(Component component) {
         super(component);
     }
 
     @Unique
+    @Override
     public void setShaderPackComment(Component title, Component body) {
         this.hoveredElementCommentTitle = Optional.of(title);
         this.hoveredElementCommentBody = new ArrayList<>(this.font.split(body, 306)); // 314 - 8 = 306

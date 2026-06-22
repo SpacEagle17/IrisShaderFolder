@@ -1,8 +1,8 @@
 package com.spaceagle17.iris_shader_folder.fabric.mixin.modern;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-
 import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.fabric.IIrisShaderPackScreen;
 import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -108,37 +108,41 @@ public class IrisModernShaderEntryMixin {
                 return;
             }
 
-            // Check if we have a tooltip for this shader
             String tooltip = ShaderTooltipSystem.getInstance().getTooltip(currentShaderName);
-
-            // Only proceed if we have a tooltip
-            if (tooltip != null && !tooltip.isEmpty()) {
-                // Get the screen object through reflection
-                Field listField = this.getClass().getDeclaredField("list");
-                listField.setAccessible(true);
-                Object listObj = listField.get(this);
-
-                Field screenField = listObj.getClass().getDeclaredField("screen");
-                screenField.setAccessible(true);
-                Object screen = screenField.get(listObj);
-
-                // Create text components for the tooltip
-                Object[] components = irisShaderFolder$createTextComponents(currentShaderNameRecolored, tooltip);
-                if (components == null) {
-                    return;
-                }
-
-                // Set the shader pack comment
-                boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
-
-                if (!success) {
-                    irisShaderFolder$debugLog("Could not find an appropriate method to set shader pack comment");
-                } else {
-                    irisShaderFolder$debugLog("Set shader pack comment for shader: " + currentShaderName);
-                }
+            if (tooltip == null || tooltip.isEmpty()) {
+                return;
             }
-        } catch (Exception e) {
-            irisShaderFolder$debugLog("Error setting shader pack comment: " + e.getMessage());
+
+            Field listField = this.getClass().getDeclaredField("list");
+            listField.setAccessible(true);
+            Object listObj = listField.get(this);
+
+            Field screenField = listObj.getClass().getDeclaredField("screen");
+            screenField.setAccessible(true);
+            Object screen = screenField.get(listObj);
+
+            // Create text components (reflection needed on fabric for multi-version compat)
+            Object[] components = irisShaderFolder$createTextComponents(currentShaderNameRecolored, tooltip);
+            if (components == null) {
+                return;
+            }
+
+            // Fast path: modern mixin adds IIrisShaderPackScreen to ShaderPackScreen
+            if (screen instanceof IIrisShaderPackScreen) {
+                ((IIrisShaderPackScreen) screen).setShaderPackComment(components[0], components[1]);
+                irisShaderFolder$debugLog("Successfully set shader pack comment for shader: " + currentShaderName);
+                return;
+            }
+
+            // Fallback: reflection for any edge case (e.g. older iris builds)
+            boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
+            if (!success) {
+                irisShaderFolder$debugLog("Could not find an appropriate method to set shader pack comment");
+            } else {
+                irisShaderFolder$debugLog("Successfully set shader pack comment for shader: " + currentShaderName);
+            }
+        } catch (Throwable e) {
+            irisShaderFolder$debugLog("Error while trying to set shader pack comment: " + e.getMessage());
         }
     }
 

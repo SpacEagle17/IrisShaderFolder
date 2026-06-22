@@ -1,5 +1,6 @@
 package com.spaceagle17.iris_shader_folder.logging;
 
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,7 +13,7 @@ public class IrisShaderFolderLogger {
 
     static {
         try {
-            logger = LogManager.getLogger("iris_shader_folder");
+            logger = LogManager.getLogger(IrisShaderFolder.MOD_ID);
         } catch (NoClassDefFoundError | Exception e) {
             log4jAvailable = false;
             System.out.println("[IrisShaderFolder] Log4j not available, using System.out fallback");

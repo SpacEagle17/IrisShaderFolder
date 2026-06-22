@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 
 public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
-    public static final String LEGACY_IRIS_CLASS = "net.coderbot.iris.gui.element.ShaderPackSelectionList";
     public static final String MODERN_IRIS_CLASS = "net.irisshaders.iris.gui.element.ShaderPackSelectionList";
 
     @Override
@@ -23,13 +22,6 @@ public class IrisShaderFolderMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains("IrisLegacyHideShaderPacksMixin") ||
-                mixinClassName.contains("IrisLegacyShaderEntryMixin") ||
-                mixinClassName.contains("IrisLegacyOptionMenuConstructorMixin") ||
-                mixinClassName.contains("IrisLegacyShaderPackScreenMixin")) {
-            return checkClassExists(LEGACY_IRIS_CLASS);
-        }
-
         if (mixinClassName.contains("IrisModernHideShaderPacksMixin") ||
                 mixinClassName.contains("IrisModernShaderEntryMixin") ||
                 mixinClassName.contains("IrisModernOptionMenuConstructorMixin") ||

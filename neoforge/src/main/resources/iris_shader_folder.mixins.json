@@ -3,16 +3,9 @@
   "package": "com.spaceagle17.iris_shader_folder.neoforge.mixin",
   "plugin": "com.spaceagle17.iris_shader_folder.neoforge.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
-    "legacy.IrisLegacyHideShaderPacksMixin",
-    "legacy.IrisLegacyOptionMenuConstructorMixin",
-    "legacy.IrisLegacyShaderEntryMixin",
-    "modern.IrisModernHideShaderPacksMixin",
-    "modern.IrisModernOptionMenuConstructorMixin",
-    "modern.IrisModernShaderEntryMixin",
-    "modern.IrisModernHideShaderPacksMixin"
+    "IrisModernHideShaderPacksMixin",
+    "IrisModernOptionMenuConstructorMixin",
+    "IrisModernShaderEntryMixin"
   ],
-  "client": [
-    "legacy.IrisLegacyShaderPackScreenMixin",
-    "modern.IrisModernShaderPackScreenMixin"
-  ]
+  "client": ["IrisModernShaderPackScreenMixin"]
 }
