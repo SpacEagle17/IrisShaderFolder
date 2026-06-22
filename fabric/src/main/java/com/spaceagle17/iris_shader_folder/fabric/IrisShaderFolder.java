@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.fabric;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;

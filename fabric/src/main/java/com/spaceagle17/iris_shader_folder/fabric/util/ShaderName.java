@@ -1,8 +1,8 @@
-package com.spaceagle17.iris_shader_folder.util;
+package com.spaceagle17.iris_shader_folder.fabric.util;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderRenameSystem;
-import com.spaceagle17.iris_shader_folder.ShaderRecolorSystem;
+import com.spaceagle17.iris_shader_folder.fabric.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.fabric.ShaderRenameSystem;
+import com.spaceagle17.iris_shader_folder.fabric.ShaderRecolorSystem;
 
 public class ShaderName {
     public static String renameShader(String originalPackName) {

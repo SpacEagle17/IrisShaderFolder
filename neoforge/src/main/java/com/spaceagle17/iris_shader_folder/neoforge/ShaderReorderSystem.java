@@ -1,6 +1,6 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.neoforge;
 
-import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.neoforge.util.ShaderPatternUtil;
 import java.util.*;
 
 public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {

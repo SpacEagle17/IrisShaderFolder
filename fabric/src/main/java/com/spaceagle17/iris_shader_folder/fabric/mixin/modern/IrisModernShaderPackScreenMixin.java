@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin.modern;
+package com.spaceagle17.iris_shader_folder.fabric.mixin.modern;
 
 import org.spongepowered.asm.mixin.*;
 

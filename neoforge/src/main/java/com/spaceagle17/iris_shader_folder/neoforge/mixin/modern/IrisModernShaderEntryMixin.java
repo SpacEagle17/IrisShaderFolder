@@ -1,9 +1,9 @@
-package com.spaceagle17.iris_shader_folder.mixin.modern;
+package com.spaceagle17.iris_shader_folder.neoforge.mixin.modern;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.neoforge.IrisShaderFolder;
 
-import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
-import com.spaceagle17.iris_shader_folder.util.ShaderName;
+import com.spaceagle17.iris_shader_folder.neoforge.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.neoforge.util.ShaderName;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -1,6 +1,6 @@
-package com.spaceagle17.iris_shader_folder.util;
+package com.spaceagle17.iris_shader_folder.neoforge.util;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.neoforge.IrisShaderFolder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

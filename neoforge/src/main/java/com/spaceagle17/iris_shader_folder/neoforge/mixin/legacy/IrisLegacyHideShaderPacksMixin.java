@@ -1,9 +1,9 @@
-package com.spaceagle17.iris_shader_folder.mixin.legacy;
+package com.spaceagle17.iris_shader_folder.neoforge.mixin.legacy;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
-import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
-import com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin;
+import com.spaceagle17.iris_shader_folder.neoforge.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.neoforge.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.neoforge.ShaderReorderSystem;
+import com.spaceagle17.iris_shader_folder.neoforge.mixin.IrisShaderFolderMixinPlugin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;

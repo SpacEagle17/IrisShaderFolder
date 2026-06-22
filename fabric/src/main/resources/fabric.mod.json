@@ -13,7 +13,9 @@
   "icon": "assets/iris_shader_folder/logo.png",
   "environment": "client",
   "entrypoints": {
-    "main": ["com.spaceagle17.iris_shader_folder.IrisShaderFolder"]
+    "main": [
+      "com.spaceagle17.iris_shader_folder.fabric.IrisShaderFolder"
+    ]
   },
   "mixins": ["iris_shader_folder.mixins.json"],
   "depends": {

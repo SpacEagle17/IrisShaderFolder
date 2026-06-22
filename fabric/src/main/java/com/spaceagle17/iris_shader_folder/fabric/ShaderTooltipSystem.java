@@ -1,9 +1,9 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.fabric;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.fabric.util.ShaderPatternUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

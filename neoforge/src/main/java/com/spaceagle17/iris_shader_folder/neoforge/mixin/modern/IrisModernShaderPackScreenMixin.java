@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin.modern;
+package com.spaceagle17.iris_shader_folder.neoforge.mixin.modern;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

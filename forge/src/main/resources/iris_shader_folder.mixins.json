@@ -1,7 +1,7 @@
 {
   "required": true,
-  "package": "com.spaceagle17.iris_shader_folder.mixin",
-  "plugin": "com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin",
+  "package": "com.spaceagle17.iris_shader_folder.forge.mixin",
+  "plugin": "com.spaceagle17.iris_shader_folder.forge.mixin.IrisShaderFolderMixinPlugin",
   "mixins": [
     "legacy.IrisLegacyHideShaderPacksMixin",
     "legacy.IrisLegacyOptionMenuConstructorMixin",

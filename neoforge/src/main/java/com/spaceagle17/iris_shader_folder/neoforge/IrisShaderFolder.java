@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.neoforge;
 
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;

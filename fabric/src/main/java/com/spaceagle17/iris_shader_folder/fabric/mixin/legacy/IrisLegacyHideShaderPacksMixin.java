@@ -1,9 +1,9 @@
-package com.spaceagle17.iris_shader_folder.mixin.legacy;
+package com.spaceagle17.iris_shader_folder.fabric.mixin.legacy;
 
-import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
-import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
-import com.spaceagle17.iris_shader_folder.mixin.IrisShaderFolderMixinPlugin;
+import com.spaceagle17.iris_shader_folder.fabric.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.fabric.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.fabric.ShaderReorderSystem;
+import com.spaceagle17.iris_shader_folder.fabric.mixin.IrisShaderFolderMixinPlugin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder.mixin;
+package com.spaceagle17.iris_shader_folder.forge.mixin;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;

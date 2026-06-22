@@ -1,6 +1,6 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.forge;
 
-import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.forge.util.ShaderPatternUtil;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

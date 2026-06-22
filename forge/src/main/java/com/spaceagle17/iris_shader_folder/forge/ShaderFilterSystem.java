@@ -1,6 +1,6 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.forge;
 
-import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.forge.util.ShaderPatternUtil;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;

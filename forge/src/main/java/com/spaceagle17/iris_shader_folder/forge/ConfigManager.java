@@ -1,4 +1,4 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.forge;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
