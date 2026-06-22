@@ -36,6 +36,7 @@ run/
 
 /IrisSearch
 /IrisShaderFolder_neoforge
+/IrisShaderFolder_forge
 
 hs_err_*.log
 replay_*.log
