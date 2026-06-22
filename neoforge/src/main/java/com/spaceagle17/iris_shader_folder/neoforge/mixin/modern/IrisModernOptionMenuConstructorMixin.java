@@ -1,7 +1,7 @@
 package com.spaceagle17.iris_shader_folder.neoforge.mixin.modern;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.spaceagle17.iris_shader_folder.neoforge.util.ShaderName;
+import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 

@@ -1,11 +1,12 @@
 package com.spaceagle17.iris_shader_folder.neoforge.mixin.legacy;
 
-import com.spaceagle17.iris_shader_folder.neoforge.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.neoforge.ShaderFilterSystem;
-import com.spaceagle17.iris_shader_folder.neoforge.ShaderReorderSystem;
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
 import com.spaceagle17.iris_shader_folder.neoforge.mixin.IrisShaderFolderMixinPlugin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -26,10 +27,8 @@ public class IrisLegacyHideShaderPacksMixin {
     private Collection<String> filterAndReorderShaderPacks(Collection<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
         ShaderReorderSystem reorderSystem = ShaderReorderSystem.getInstance();
-        
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            System.out.println("This is Iris Legacy!!");
-        }
+
+        irisShaderFolder$debugLog("This is Iris Legacy!!");
         
         // First filter the packs
         List<String> filteredPacks = names.stream()
@@ -38,5 +37,10 @@ public class IrisLegacyHideShaderPacksMixin {
         
         // Then reorder them
         return reorderSystem.reorderShaderPacks(filteredPacks);
+    }
+
+    @Unique
+    private static void irisShaderFolder$debugLog(String message) {
+        IrisShaderFolder.debugLog("[IrisLegacyHideShaderPacksMixin] " + message);
     }
 }

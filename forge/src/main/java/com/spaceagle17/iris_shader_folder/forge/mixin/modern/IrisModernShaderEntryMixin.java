@@ -1,9 +1,9 @@
 package com.spaceagle17.iris_shader_folder.forge.mixin.modern;
 
-import com.spaceagle17.iris_shader_folder.forge.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 
-import com.spaceagle17.iris_shader_folder.forge.ShaderTooltipSystem;
-import com.spaceagle17.iris_shader_folder.forge.util.ShaderName;
+import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,6 +42,11 @@ public class IrisModernShaderEntryMixin {
     private static boolean commentMethodInitialized = false;
     @Unique
     private static Method cachedCommentMethod = null;
+
+    @Unique
+    private static void irisShaderFolder$debugLog(String message) {
+        IrisShaderFolder.debugLog("[IrisModernShaderEntryMixin] " + message);
+    }
     
     @ModifyVariable(
         method = {
@@ -123,15 +128,14 @@ public class IrisModernShaderEntryMixin {
                 // Set the shader pack comment
                 boolean success = irisShaderFolder$setShaderPackComment(screen, components[0], components[1]);
 
-                if (!success && IrisShaderFolder.debugLoggingEnabled) {
-                    System.out.println("Could not find an appropriate method to set shader pack comment");
+                if (!success) {
+                    irisShaderFolder$debugLog("Could not find an appropriate method to set shader pack comment");
+                } else {
+                    irisShaderFolder$debugLog("Successfully set shader pack comment for shader: " + currentShaderName);
                 }
             }
         } catch (Exception e) {
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                System.out.println("Error in shader tooltip handling: " + e.getMessage());
-                e.printStackTrace();
-            }
+            irisShaderFolder$debugLog("Could not set shader pack comment for shader: " + currentShaderName);
         }
     }
 
@@ -255,9 +259,7 @@ public class IrisModernShaderEntryMixin {
             // Reflection approach failed
         }
 
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            System.out.println("Failed to create text components - cannot set shader pack comment");
-        }
+        irisShaderFolder$debugLog("Failed to create text components - cannot set shader pack comment");
         return null;
     }
     /**

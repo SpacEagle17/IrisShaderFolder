@@ -45,7 +45,10 @@ java {
 	targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+
 jar {
+	from project(':common').sourceSets.main.output
+
 	inputs.property "archivesName", project.base.archivesName
 
 	from("../LICENSE") {

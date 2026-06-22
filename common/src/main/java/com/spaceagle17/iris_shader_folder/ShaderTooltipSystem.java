@@ -1,9 +1,10 @@
-package com.spaceagle17.iris_shader_folder.neoforge;
+package com.spaceagle17.iris_shader_folder;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.spaceagle17.iris_shader_folder.neoforge.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.config.ConfigManager;
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,6 +42,10 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
         return INSTANCE;
     }
 
+    private static void debugLog(String message) {
+        IrisShaderFolder.debugLog("[ShaderTooltipSystem]" + message);
+    }
+
     public void updateRules() {
         List<String> tooltipPatterns = IrisShaderFolder.getInstance().getTooltipPatterns();
         boolean configChanged = !tooltipPatterns.equals(lastTooltipPatterns);
@@ -58,11 +63,10 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
             if (rule.isEmpty() || rule.startsWith("#")) continue;
 
             try {
-                // Split by [|] to separate shader pattern from tooltip text
                 String[] parts = rule.split("\\s*\\[\\|\\]\\s*", 2);
 
                 if (parts.length != 2) {
-                    IrisShaderFolder.LOGGER.error("Invalid tooltip rule format: {}", rule);
+                    IrisShaderFolder.log(3, "Invalid tooltip rule format: " + rule);
                     continue;
                 }
 
@@ -70,9 +74,9 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
                 String tooltipText = parts[1].trim();
 
                 tooltipRules.add(new TooltipRule(shaderPattern, tooltipText));
-                ShaderPatternUtil.logDebug("Added tooltip rule for pattern: " + shaderPattern);
+                debugLog("Added tooltip rule for pattern: " + shaderPattern);
             } catch (Exception e) {
-                IrisShaderFolder.LOGGER.error("Error parsing tooltip rule: " + rule, e);
+                IrisShaderFolder.log(3, "Error parsing tooltip rule: " + rule + ": " + e.getMessage());
             }
         }
 
@@ -133,9 +137,7 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
                     String content = new String(Files.readAllBytes(packJsonPath));
                     description = extractDescription(content);
                 } catch (IOException e) {
-                    if (IrisShaderFolder.debugLoggingEnabled) {
-                        IrisShaderFolder.LOGGER.error("Error reading pack.json from folder: " + folderPath, e);
-                    }
+                    debugLog("Error reading pack.json from folder: " + folderPath + ": " + e.getMessage());
                 }
             } else {
                 Path zipPath = IrisShaderFolder.shaderpacks.resolve(baseName + ".zip");
@@ -149,16 +151,12 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
                             }
                         }
                     } catch (Exception e) {
-                        if (IrisShaderFolder.debugLoggingEnabled) {
-                            IrisShaderFolder.LOGGER.error("Error reading pack.json from zip: " + zipPath, e);
-                        }
+                        debugLog("Error reading pack.json from zip: " + zipPath + ": " + e.getMessage());
                     }
                 }
             }
         } catch (Exception e) {
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.error("Error getting pack.json description for: " + shaderName, e);
-            }
+            debugLog("Error getting pack.json description for: " + shaderName + ": " + e.getMessage());
         }
 
         packJsonDescriptionCache.put(shaderName, description);
@@ -189,9 +187,7 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
                 return jsonObject.get("description").getAsString();
             }
         } catch (JsonParseException e) {
-            if (IrisShaderFolder.debugLoggingEnabled) {
-                IrisShaderFolder.LOGGER.error("Error parsing pack.json", e);
-            }
+            debugLog("Error parsing pack.json: " + e.getMessage());
         }
         return null;
     }
@@ -210,13 +206,8 @@ public class ShaderTooltipSystem implements ConfigManager.ConfigUpdateListener {
             this.tooltipText = tooltipText;
         }
 
-        public String getShaderPattern() {
-            return shaderPattern;
-        }
-
-        public String getTooltipText() {
-            return tooltipText;
-        }
+        public String getShaderPattern() { return shaderPattern; }
+        public String getTooltipText() { return tooltipText; }
     }
 
     @Override

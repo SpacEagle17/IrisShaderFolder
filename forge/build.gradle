@@ -168,6 +168,8 @@ tasks.named('jar') {
 	finalizedBy shadowJar
 }
 
+sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
+
 sourceSets.each {
 	def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
 	it.output.resourcesDir = dir

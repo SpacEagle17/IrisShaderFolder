@@ -1,6 +1,7 @@
-package com.spaceagle17.iris_shader_folder.forge;
+package com.spaceagle17.iris_shader_folder;
 
-import com.spaceagle17.iris_shader_folder.forge.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.config.ConfigManager;
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,10 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 	private ShaderRenameSystem() {
 		ConfigManager.registerUpdateListener(this);
 		updateRules();
+	}
+
+	private static void debugLog(String message) {
+		IrisShaderFolder.debugLog("[ShaderRenameSystem]" + message);
 	}
 
 	public static ShaderRenameSystem getInstance() {
@@ -47,7 +52,7 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 			try {
 				String[] parts = trimmedRule.split("\\s*\\[\\|\\]\\s*");
 				if (parts.length < 2) {
-					IrisShaderFolder.LOGGER.error("Invalid rename rule format: {}", trimmedRule);
+					IrisShaderFolder.log(3, "Invalid rename rule format: " + trimmedRule);
 					continue;
 				}
 
@@ -57,7 +62,7 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 				for (int i = 1; i < parts.length; i++) {
 					String[] renameParts = parts[i].split("\\s*\\[->\\]\\s*", 2);
 					if (renameParts.length != 2) {
-						IrisShaderFolder.LOGGER.error("Invalid rename part rule format: {}", parts[i]);
+						IrisShaderFolder.log(3, "Invalid rename part rule format: " + parts[i]);
 						continue;
 					}
 
@@ -68,11 +73,11 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 
 				if (!partRules.isEmpty()) {
 					renameRules.add(new RenameRule(shaderPattern, partRules));
-					ShaderPatternUtil.logDebug("Added rename rule for pattern: " + shaderPattern +
+					debugLog("Added rename rule for pattern: " + shaderPattern +
 						" with " + partRules.size() + " replacement rule(s)");
 				}
 			} catch (Exception e) {
-				IrisShaderFolder.LOGGER.error("Error parsing rename rule: " + trimmedRule, e);
+				IrisShaderFolder.log(3, "Error parsing rename rule: " + trimmedRule + ": " + e.getMessage());
 			}
 		}
 	}
@@ -85,30 +90,30 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 		String result = name;
 		boolean modified = false;
 
-		ShaderPatternUtil.logDebug("Processing shader rename: [" + name + "]");
-		ShaderPatternUtil.logDebug("--- Applying rename rules ---");
+		debugLog("Processing shader rename: [" + name + "]");
+		debugLog("--- Applying rename rules ---");
 
 		for (RenameRule rule : renameRules) {
-			ShaderPatternUtil.logDebug("- Checking rename rule with shader pattern: [" + rule.getShaderPattern() + "]");
+			debugLog("- Checking rename rule with shader pattern: [" + rule.getShaderPattern() + "]");
 
 			if (!ShaderPatternUtil.matchesPattern(name, rule.getShaderPattern())) {
-				ShaderPatternUtil.logDebug("  - Rule does not match");
+				debugLog("  - Rule does not match");
 				continue;
 			}
 
-			ShaderPatternUtil.logDebug("  - Rule matches!");
+			debugLog("  - Rule matches!");
 			for (RenamePartRule partRule : rule.getPartRules()) {
 				String before = result;
 				result = applyRenamePartRule(result, partRule);
 
 				if (!before.equals(result)) {
 					modified = true;
-					ShaderPatternUtil.logDebug("  - Applied rename rule [" + partRule.getPartPattern() +
+					debugLog("  - Applied rename rule [" + partRule.getPartPattern() +
 						" -> " + partRule.getReplacement() + "]");
-					ShaderPatternUtil.logDebug("    * Before: [" + before + "]");
-					ShaderPatternUtil.logDebug("    * After:  [" + result + "]");
+					debugLog("    * Before: [" + before + "]");
+					debugLog("    * After:  [" + result + "]");
 				} else {
-					ShaderPatternUtil.logDebug("  - Rename rule [" + partRule.getPartPattern() + "] had no effect");
+					debugLog("  - Rename rule [" + partRule.getPartPattern() + "] had no effect");
 				}
 			}
 		}
@@ -116,9 +121,9 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 		renameCache.put(name, result);
 
 		if (modified) {
-			ShaderPatternUtil.logDebug("=== FINAL RENAME RESULT ===");
-			ShaderPatternUtil.logDebug("- Original: [" + name + "]");
-			ShaderPatternUtil.logDebug("- Renamed:  [" + result + "]");
+			debugLog("=== FINAL RENAME RESULT ===");
+			debugLog("- Original: [" + name + "]");
+			debugLog("- Renamed:  [" + result + "]");
 		}
 
 		return result;
@@ -138,7 +143,7 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 			Matcher matcher = compiledPattern.matcher(input);
 			return matcher.replaceAll(Matcher.quoteReplacement(replacement));
 		} catch (PatternSyntaxException e) {
-			IrisShaderFolder.LOGGER.error("Invalid pattern in rename rule: " + partPattern, e);
+			IrisShaderFolder.log(3, "Invalid pattern in rename rule: " + partPattern + ": " + e.getMessage());
 			return input;
 		}
 	}
@@ -165,13 +170,8 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 			this.partRules = partRules;
 		}
 
-		public String getShaderPattern() {
-			return shaderPattern;
-		}
-
-		public List<RenamePartRule> getPartRules() {
-			return partRules;
-		}
+		public String getShaderPattern() { return shaderPattern; }
+		public List<RenamePartRule> getPartRules() { return partRules; }
 	}
 
 	private static class RenamePartRule {
@@ -183,12 +183,7 @@ public class ShaderRenameSystem implements ConfigManager.ConfigUpdateListener {
 			this.replacement = replacement;
 		}
 
-		public String getPartPattern() {
-			return partPattern;
-		}
-
-		public String getReplacement() {
-			return replacement;
-		}
+		public String getPartPattern() { return partPattern; }
+		public String getReplacement() { return replacement; }
 	}
 }

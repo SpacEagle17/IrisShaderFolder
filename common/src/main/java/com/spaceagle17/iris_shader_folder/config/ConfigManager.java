@@ -1,10 +1,12 @@
-package com.spaceagle17.iris_shader_folder.fabric;
+package com.spaceagle17.iris_shader_folder.config;
+
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.ModLoaderSpecifics;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,66 +17,61 @@ import java.util.concurrent.TimeUnit;
 
 public class ConfigManager {
     private static final String CONFIG_FILENAME = "iris_shader_folder.properties";
-    private static final Path CONFIG_PATH = Paths.get("config", CONFIG_FILENAME);
+    private static Path configPath;
     private static final Properties properties = new Properties();
     private static FileTime lastModified = null;
     private static boolean watcherActive = false;
     private static ScheduledExecutorService scheduler;
-    
-    // List of listeners to notify when config changes
+
     private static final List<ConfigUpdateListener> updateListeners = new ArrayList<>();
 
-    private static void debugLog(String message) {
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            IrisShaderFolder.LOGGER.info("[Config] " + message);
+    private static Path getConfigPath() {
+        if (configPath == null) {
+            configPath = ModLoaderSpecifics.configDirectory().resolve(CONFIG_FILENAME);
         }
+        return configPath;
     }
 
-    /**
-     * Interface for systems that need to be notified when config changes
-     */
+    private static void debugLog(String message) {
+        IrisShaderFolder.debugLog("[Config] " + message);
+    }
+
     public interface ConfigUpdateListener {
         void onConfigUpdate();
     }
-    
-    /**
-     * Register a system to be notified of config changes
-     */
+
     public static void registerUpdateListener(ConfigUpdateListener listener) {
         if (!updateListeners.contains(listener)) {
             updateListeners.add(listener);
             debugLog("Registered config update listener: " + listener.getClass().getSimpleName());
         }
     }
-    
-    /**
-     * Notify all registered systems that config has changed
-     */
+
     private static void notifyConfigUpdated() {
         debugLog("Notifying " + updateListeners.size() + " listeners of config update");
         for (ConfigUpdateListener listener : updateListeners) {
             try {
                 listener.onConfigUpdate();
             } catch (Exception e) {
-                IrisShaderFolder.LOGGER.error("Error notifying listener " + 
-                    listener.getClass().getSimpleName() + " of config update", e);
+                IrisShaderFolder.log(3, "Error notifying listener " +
+                    listener.getClass().getSimpleName() + " of config update: " + e.getMessage());
             }
         }
     }
 
     public static void createConfig() {
         try {
-            Files.createDirectories(CONFIG_PATH.getParent());
-            Files.createFile(CONFIG_PATH);
+            Files.createDirectories(getConfigPath().getParent());
+            Files.createFile(getConfigPath());
             writeInitialConfig();
-            IrisShaderFolder.LOGGER.info("Successfully created config file");
+            IrisShaderFolder.log(1, "Successfully created config file");
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error creating config file: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error creating config file: " + e.getMessage());
         }
     }
 
     private static void writeInitialConfig() throws IOException {
-        try (FileWriter writer = new FileWriter(CONFIG_PATH.toString(), false)) {
+        try (FileWriter writer = new FileWriter(getConfigPath().toString(), false)) {
             writer.write("# Iris Shader Folder - Configuration File\n");
             writer.write("# Made for version " + IrisShaderFolder.VERSION + "\n");
             writer.write("# Thank you for using Iris Shader Folder - SpacEagle17\n");
@@ -83,7 +80,7 @@ public class ConfigManager {
 
     public static void updateVersionLine() {
         try {
-            List<String> lines = Files.readAllLines(CONFIG_PATH, StandardCharsets.UTF_8);
+            List<String> lines = Files.readAllLines(getConfigPath(), StandardCharsets.UTF_8);
             boolean versionLineFound = false;
 
             for (int i = 0; i < lines.size(); i++) {
@@ -102,33 +99,31 @@ public class ConfigManager {
                 }
             }
 
-            Files.write(CONFIG_PATH, lines, StandardCharsets.UTF_8);
+            Files.write(getConfigPath(), lines, StandardCharsets.UTF_8);
             debugLog("Successfully updated version info in config file");
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error updating config file with version: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error updating config file with version: " + e.getMessage());
         }
     }
 
     public static void writeConfig(String option, String value, String description) {
         try {
-            if (!Files.exists(CONFIG_PATH)) {
+            if (!Files.exists(getConfigPath())) {
                 createConfig();
             } else {
                 updateVersionLine();
             }
-            
+
             loadProperties();
-            
+
             if (!properties.containsKey(option)) {
-                List<String> lines = Files.readAllLines(CONFIG_PATH, StandardCharsets.UTF_8);
-                try (FileWriter writer = new FileWriter(CONFIG_PATH.toString(), false)) {
-                    // Write existing lines
+                List<String> lines = Files.readAllLines(getConfigPath(), StandardCharsets.UTF_8);
+                try (FileWriter writer = new FileWriter(getConfigPath().toString(), false)) {
                     for (String line : lines) {
                         writer.write(line + "\n");
                     }
 
-                    // Add new configuration
-                    writer.write("\n"); // Add newline before new entry
+                    writer.write("\n");
                     if (description != null) {
                         String[] descLines = description.split("\n");
                         for (String line : descLines) {
@@ -140,7 +135,7 @@ public class ConfigManager {
                 }
             }
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error writing to config file: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error writing to config file: " + e.getMessage());
         }
     }
 
@@ -151,38 +146,34 @@ public class ConfigManager {
 
     public static void loadProperties() {
         try {
-            if (!Files.exists(CONFIG_PATH)) {
+            if (!Files.exists(getConfigPath())) {
                 createConfig();
                 return;
             }
-            
-            try (InputStream in = Files.newInputStream(CONFIG_PATH)) {
+
+            try (InputStream in = Files.newInputStream(getConfigPath())) {
                 properties.clear();
                 properties.load(in);
-                lastModified = Files.getLastModifiedTime(CONFIG_PATH);
+                lastModified = Files.getLastModifiedTime(getConfigPath());
             }
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error loading properties: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error loading properties: " + e.getMessage());
         }
     }
 
-    /**
-     * Writes a section to the config file
-     */
     public static void writeSection(String sectionName, String content, String description) {
         try {
-            if (!Files.exists(CONFIG_PATH)) {
+            if (!Files.exists(getConfigPath())) {
                 createConfig();
             }
-            
-            List<String> lines = Files.readAllLines(CONFIG_PATH, StandardCharsets.UTF_8);
+
+            List<String> lines = Files.readAllLines(getConfigPath(), StandardCharsets.UTF_8);
             String startMarker = sectionName + "Start:[";
             String endMarker = "]:" + sectionName + "End";
-            
+
             int startIndex = -1;
             int endIndex = -1;
-            
-            // Find existing section
+
             for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).trim().equals(startMarker)) {
                     startIndex = i;
@@ -191,28 +182,21 @@ public class ConfigManager {
                     break;
                 }
             }
-            
-            // Check if content is already the same (to avoid unnecessary writes)
+
             if (startIndex != -1 && endIndex != -1) {
                 StringBuilder existingContent = new StringBuilder();
                 for (int i = startIndex + 1; i < endIndex; i++) {
-                    if (existingContent.length() > 0) {
-                        existingContent.append("\n");
-                    }
+                    if (existingContent.length() > 0) existingContent.append("\n");
                     existingContent.append(lines.get(i));
                 }
-                
-                // If content is the same, don't rewrite
                 if (existingContent.toString().equals(String.join("\n", content.split("\n")))) {
                     return;
                 }
             }
-            
-            // Create a new list for the updated content
+
             List<String> newLines = new ArrayList<>();
-            
+
             if (startIndex != -1 && endIndex != -1) {
-                // Section exists, update it
                 newLines.addAll(lines.subList(0, startIndex));
                 newLines.add(startMarker);
                 for (String line : content.split("\n")) {
@@ -223,14 +207,12 @@ public class ConfigManager {
                     newLines.addAll(lines.subList(endIndex + 1, lines.size()));
                 }
             } else {
-                // Section doesn't exist, add it at the end
                 newLines.addAll(lines);
-                
+
                 if (newLines.size() > 0 && !newLines.get(newLines.size() - 1).trim().isEmpty()) {
-                    newLines.add(""); // Add empty line before new section
+                    newLines.add("");
                 }
-                
-                // Add description
+
                 newLines.add("#--------------------------------------------------------------------------------");
                 if (description != null) {
                     for (String line : description.split("\n")) {
@@ -238,107 +220,86 @@ public class ConfigManager {
                     }
                     newLines.add("");
                 }
-                
-                // Add the section
+
                 newLines.add(startMarker);
                 for (String line : content.split("\n")) {
                     newLines.add(line);
                 }
                 newLines.add(endMarker);
             }
-            
-            // Write the updated file
-            Files.write(CONFIG_PATH, newLines, StandardCharsets.UTF_8);
-            lastModified = Files.getLastModifiedTime(CONFIG_PATH);
-            
+
+            Files.write(getConfigPath(), newLines, StandardCharsets.UTF_8);
+            lastModified = Files.getLastModifiedTime(getConfigPath());
+
             debugLog("Successfully wrote section: " + sectionName);
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error writing section to config: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error writing section to config: " + e.getMessage());
         }
     }
-    
-    /**
-     * Reads a section from the config file
-     */
+
     public static String readSection(String sectionName) {
         try {
-            if (!Files.exists(CONFIG_PATH)) {
+            if (!Files.exists(getConfigPath())) {
                 return "";
             }
-            
-            List<String> lines = Files.readAllLines(CONFIG_PATH, StandardCharsets.UTF_8);
+
+            List<String> lines = Files.readAllLines(getConfigPath(), StandardCharsets.UTF_8);
             String startMarker = sectionName + "Start:[";
             String endMarker = "]:" + sectionName + "End";
-            
+
             boolean inSection = false;
             StringBuilder content = new StringBuilder();
-            
+
             for (String line : lines) {
                 line = line.trim();
-                
                 if (line.equals(startMarker)) {
                     inSection = true;
                 } else if (line.equals(endMarker)) {
                     inSection = false;
                 } else if (inSection) {
-                    if (content.length() > 0) {
-                        content.append("\n");
-                    }
+                    if (content.length() > 0) content.append("\n");
                     content.append(line);
                 }
             }
-            
+
             return content.toString();
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error reading section from config: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error reading section from config: " + e.getMessage());
             return "";
         }
     }
-    
-    /**
-     * Gets all lines from a section that are not comments or empty
-     */
+
     public static List<String> getSectionItems(String sectionName) {
         String sectionContent = readSection(sectionName);
         List<String> items = new ArrayList<>();
-        
+
         for (String line : sectionContent.split("\n")) {
             line = line.trim();
             if (!line.isEmpty() && !line.startsWith("#")) {
                 items.add(line);
             }
         }
-        
+
         return items;
     }
-    
-    /**
-     * Core method to handle config file changes
-     * This is called by both the scheduled watcher and the immediate check
-     */
+
     private static void processConfigUpdate() {
         try {
-            if (Files.exists(CONFIG_PATH)) {
-                FileTime currentModified = Files.getLastModifiedTime(CONFIG_PATH);
+            if (Files.exists(getConfigPath())) {
+                FileTime currentModified = Files.getLastModifiedTime(getConfigPath());
                 if (!currentModified.equals(lastModified)) {
                     debugLog("Config file changed, reloading settings");
                     loadProperties();
-                    
-                    IrisShaderFolder instance = IrisShaderFolder.getInstance();
-                    if (instance != null) {
-                        instance.loadConfigOptions();
-                    }
-                    
-                    // Notify all registered listeners
-                    notifyConfigUpdated();
+                    LoadConfig.loadConfigOptions();
 
+                    notifyConfigUpdated();
                 }
             }
         } catch (IOException e) {
-            IrisShaderFolder.LOGGER.error("Error checking for config updates: " + e.getMessage());
+            IrisShaderFolder.log(3, "Error checking for config updates: " + e.getMessage());
         }
     }
-    
+
     public static void startConfigWatcher() {
         if (watcherActive) return;
 
@@ -351,7 +312,7 @@ public class ConfigManager {
 
         scheduler.scheduleAtFixedRate(ConfigManager::processConfigUpdate, 1, 1, TimeUnit.SECONDS);
     }
-    
+
     public static void stopConfigWatcher() {
         if (watcherActive && scheduler != null) {
             scheduler.shutdown();

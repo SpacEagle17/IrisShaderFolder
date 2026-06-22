@@ -25,6 +25,8 @@ repositories {
 	mavenCentral()
 }
 
+sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
+
 neoForge {
 	version = neoforgeProps.getProperty('neo_version')
 

@@ -1,6 +1,7 @@
-package com.spaceagle17.iris_shader_folder.forge;
+package com.spaceagle17.iris_shader_folder;
 
-import com.spaceagle17.iris_shader_folder.forge.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.config.ConfigManager;
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.*;
 
 public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
@@ -14,7 +15,6 @@ public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
 
     @Override
     public void onConfigUpdate() {
-        // Clear any cached data or pattern compilations
         lastReorderPatterns.clear();
     }
 
@@ -25,51 +25,48 @@ public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
         return INSTANCE;
     }
 
+    private static void debugLog(String message) {
+        IrisShaderFolder.debugLog("[ShaderReorderSystem]" + message);
+    }
+
     public List<String> reorderShaderPacks(List<String> shaderPacks) {
         if (shaderPacks.isEmpty()) {
             return shaderPacks;
         }
 
-        // Create a working copy of the input list
         List<String> result = new ArrayList<>(shaderPacks);
 
-        // Special case for SpacEagle: Euphoria-Patches must be first
         if (IrisShaderFolder.isSpacEagle()) {
             String euphoriaPatches = "Euphoria-Patches";
-            // Check both with and without .zip extension
             if (result.contains(euphoriaPatches)) {
                 result.remove(euphoriaPatches);
                 result.add(0, euphoriaPatches);
             }
 
-            ShaderPatternUtil.logDebug("SpacEagle detected: Euphoria-Patches prioritized to first position");
+            debugLog("SpacEagle detected: Euphoria-Patches prioritized to first position");
         }
 
-        // If there are no reorder patterns, return the result
         List<String> reorderPatterns = IrisShaderFolder.getInstance().getReorderPatterns();
         if (reorderPatterns.isEmpty()) {
             return result;
         }
 
-        // Create rules based on line order
         List<ReorderRule> rules = new ArrayList<>();
         int rulePosition = 0;
         for (String patternLine : reorderPatterns) {
             String pattern = patternLine.trim();
 
-            // Skip empty lines and comments
             if (pattern.isEmpty() || pattern.startsWith("#")) {
                 continue;
             }
 
-            // Check for [!] prefix (forced - don't skip already matched)
             boolean forced = false;
             if (pattern.startsWith("[!]")) {
                 forced = true;
-                pattern = pattern.substring(3).trim(); // Remove [!] prefix
-                ShaderPatternUtil.logDebug("Added forced reorder rule: pattern '" + pattern + "' at position " + (rulePosition + 1));
+                pattern = pattern.substring(3).trim();
+                debugLog("Added forced reorder rule: pattern '" + pattern + "' at position " + (rulePosition + 1));
             } else {
-                ShaderPatternUtil.logDebug("Added reorder rule: pattern '" + pattern + "' at position " + (rulePosition + 1));
+                debugLog("Added reorder rule: pattern '" + pattern + "' at position " + (rulePosition + 1));
             }
 
             rules.add(new ReorderRule(pattern, rulePosition, forced));
@@ -78,8 +75,7 @@ public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
 
         Set<String> alreadyMatched = new HashSet<>();
 
-        // Process each rule in order
-        int nextAvailableIndex = IrisShaderFolder.isSpacEagle() ? 1 : 0; // Start at index 1 if Euphoria-Patches is at 0
+        int nextAvailableIndex = IrisShaderFolder.isSpacEagle() ? 1 : 0;
         for (ReorderRule rule : rules) {
             List<String> matchingPacks = new ArrayList<>();
             Iterator<String> it = result.iterator();
@@ -102,15 +98,12 @@ public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
                 }
             }
 
-            // Sort matching packs alphabetically
             Collections.sort(matchingPacks);
 
-            // Determine insertion index
             int insertIndex = rule.getPosition();
             insertIndex = Math.max(insertIndex, nextAvailableIndex);
             insertIndex = Math.min(insertIndex, result.size());
 
-            // Insert packs at the determined index
             for (String pack : matchingPacks) {
                 result.add(insertIndex, pack);
                 insertIndex++;
@@ -132,16 +125,8 @@ public class ShaderReorderSystem implements ConfigManager.ConfigUpdateListener {
             this.forced = forced;
         }
 
-        public String getPattern() {
-            return pattern;
-        }
-
-        public int getPosition() {
-            return position;
-        }
-
-        public boolean isForced() {
-            return forced;
-        }
+        public String getPattern() { return pattern; }
+        public int getPosition() { return position; }
+        public boolean isForced() { return forced; }
     }
 }

@@ -1,6 +1,7 @@
-package com.spaceagle17.iris_shader_folder.fabric;
+package com.spaceagle17.iris_shader_folder;
 
-import com.spaceagle17.iris_shader_folder.fabric.util.ShaderPatternUtil;
+import com.spaceagle17.iris_shader_folder.config.ConfigManager;
+import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,7 +14,6 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
     private static final String EUPHORIA_DETECTION = "(EuphoriaPatches|Euphoria-Patches|EP_earlyDev|Complementary.* \\+ EP)";
     private static final String EUPHORIA_PATTERN = "{.*" + EUPHORIA_DETECTION + ".*}";
 
-    // Define euphoriaRules as a class field
     private final List<ColorRule> euphoriaRules = new ArrayList<>();
     private final Map<String, String> recolorCache = new HashMap<>();
     private final Set<String> loggedRecolors = new HashSet<>();
@@ -26,7 +26,7 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
 
     private List<RecolorRule> recolorRules = new ArrayList<>();
     private List<String> lastRecolorPatterns = new ArrayList<>();
-    private boolean euphoriaRulesAdded = false; // Track if Euphoria rules have been added
+    private boolean euphoriaRulesAdded = false;
 
     static {
         COLOR_MAP.put("black", "§0");
@@ -54,7 +54,6 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
     }
 
     private ShaderRecolorSystem() {
-        // Initialize euphoriaRules in the constructor
         euphoriaRules.add(new ColorRule("+ EuphoriaPatches_{version}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("Euphoria-Patches{.*}", COLOR_MAP.get("light_purple")));
         euphoriaRules.add(new ColorRule("EuphoriaPatches_{version}-dev{version}{.*}", COLOR_MAP.get("light_purple")));
@@ -63,9 +62,12 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         euphoriaRules.add(new ColorRule("_0EuphoriaPatches{.*}Error{.*}Shader", COLOR_MAP.get("red")));
         euphoriaRules.add(new ColorRule("Outdated", COLOR_MAP.get("red")));
 
-        // Register as config update listener
         ConfigManager.registerUpdateListener(this);
         updateRules();
+    }
+
+    private static void debugLog(String message) {
+        IrisShaderFolder.debugLog("[ShaderRecolorSystem]" + message);
     }
 
     public static ShaderRecolorSystem getInstance() {
@@ -79,7 +81,6 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         List<String> recolorPatterns = IrisShaderFolder.getInstance().getRecolorPatterns();
         boolean configChanged = !recolorPatterns.equals(lastRecolorPatterns);
 
-        // Always process at least once to add Euphoria rules, or if config changed
         if (!configChanged && euphoriaRulesAdded) {
             return;
         }
@@ -92,17 +93,15 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         euphoriaRulesAdded = false;
         boolean userOverridesHardcodedEuphoria = false;
 
-        // Process user-defined rules
         for (String rule : recolorPatterns) {
             rule = rule.trim();
             if (rule.isEmpty() || rule.startsWith("#")) continue;
 
             try {
-                // Split by [|] to separate shader pattern from color rules
                 String[] parts = rule.split("\\s*\\[\\|\\]\\s*");
 
                 if (parts.length < 2) {
-                    IrisShaderFolder.LOGGER.error("Invalid recolor rule format: {}", rule);
+                    IrisShaderFolder.log(3, "Invalid recolor rule format: " + rule);
                     continue;
                 }
 
@@ -111,20 +110,18 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
                     userOverridesHardcodedEuphoria = true;
                 }
 
-                // Process color rules (part_pattern [->] color_name)
                 List<ColorRule> colorRulesList = new ArrayList<>();
 
                 for (int i = 1; i < parts.length; i++) {
                     String[] colorParts = parts[i].split("\\s*\\[->\\]\\s*");
                     if (colorParts.length != 2) {
-                        IrisShaderFolder.LOGGER.error("Invalid color rule format: {}", parts[i]);
+                        IrisShaderFolder.log(3, "Invalid color rule format: " + parts[i]);
                         continue;
                     }
 
                     String partPattern = colorParts[0].trim();
                     String colorName = colorParts[1].trim();
 
-                    // Get color code from name or use as is if it starts with §
                     String colorCode = colorName.startsWith("§")
                         ? colorName
                         : COLOR_MAP.getOrDefault(colorName.toLowerCase(), "§f");
@@ -134,27 +131,26 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
 
                 if (!colorRulesList.isEmpty()) {
                     recolorRules.add(new RecolorRule(shaderPattern, colorRulesList));
-                    ShaderPatternUtil.logDebug("Added recolor rule for pattern: " + shaderPattern +
+                    debugLog("Added recolor rule for pattern: " + shaderPattern +
                         " with " + colorRulesList.size() + " color rules");
                 }
             } catch (Exception e) {
-                IrisShaderFolder.LOGGER.error("Error parsing recolor rule: " + rule, e);
+                IrisShaderFolder.log(3, "Error parsing recolor rule: " + rule + ": " + e.getMessage());
             }
         }
 
         if (userOverridesHardcodedEuphoria) {
-            ShaderPatternUtil.logDebug("Skipping default Euphoria recolor rules because user-defined shader_pattern overrides them");
+            debugLog("Skipping default Euphoria recolor rules because user-defined shader_pattern overrides them");
         } else {
             addDefaultEuphoriaRules();
         }
 
-        // Mark that we've added Euphoria rules
         euphoriaRulesAdded = !userOverridesHardcodedEuphoria;
     }
 
     private void addDefaultEuphoriaRules() {
         recolorRules.add(new RecolorRule(EUPHORIA_PATTERN, euphoriaRules));
-        ShaderPatternUtil.logDebug("Added default recolor rule for Euphoria Patches");
+        debugLog("Added default recolor rule for Euphoria Patches");
     }
 
     private boolean matchesHardcodedEuphoriaTargets(String shaderPattern) {
@@ -168,7 +164,6 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
                 }
             }
         } catch (PatternSyntaxException ignored) {
-            // Invalid user pattern is handled elsewhere during rule parsing.
         }
 
         return false;
@@ -183,46 +178,42 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         boolean modified = false;
         String[] colorByIndex = new String[name.length()];
 
-        ShaderPatternUtil.logDebug("Processing shader name: [" + name + "]");
+        debugLog("Processing shader name: [" + name + "]");
+        debugLog("--- Applying recolor rules ---");
 
-        // Apply rules once, in configured order (user rules first, optional default last).
-        ShaderPatternUtil.logDebug("--- Applying recolor rules ---");
         for (RecolorRule rule : recolorRules) {
             boolean isEuphoriaRule = rule.getShaderPattern().equals(EUPHORIA_PATTERN);
 
-            ShaderPatternUtil.logDebug("- Checking rule with pattern: [" + rule.getShaderPattern() +
+            debugLog("- Checking rule with pattern: [" + rule.getShaderPattern() +
                                    (isEuphoriaRule ? "] (Euphoria rule)" : "]"));
 
             if (ShaderPatternUtil.matchesPattern(name, rule.getShaderPattern())) {
-                ShaderPatternUtil.logDebug("  - Rule matches!");
+                debugLog("  - Rule matches!");
 
                 for (ColorRule colorRule : rule.getColorRules()) {
                     boolean ruleApplied = applyColorRule(name, colorByIndex, colorRule);
 
                     if (ruleApplied) {
                         modified = true;
-                        ShaderPatternUtil.logDebug("  - Applied color rule [" + colorRule.getPartPattern() +
+                        debugLog("  - Applied color rule [" + colorRule.getPartPattern() +
                                               " -> " + colorRule.getColorCode() + "]");
                     } else {
-                        ShaderPatternUtil.logDebug("  - Color rule [" + colorRule.getPartPattern() +
+                        debugLog("  - Color rule [" + colorRule.getPartPattern() +
                                               "] had no effect");
                     }
                 }
             } else {
-                ShaderPatternUtil.logDebug("  - Rule does not match");
+                debugLog("  - Rule does not match");
             }
         }
 
         result = buildColoredResult(name, colorByIndex);
-
-        // Store in cache
         recolorCache.put(name, result);
 
-        // Log final result
         if (modified) {
-            ShaderPatternUtil.logDebug("=== FINAL RESULT ===");
-            ShaderPatternUtil.logDebug("- Original: [" + name + "]");
-            ShaderPatternUtil.logDebug("- Recolored: [" + result + "]");
+            debugLog("=== FINAL RESULT ===");
+            debugLog("- Original: [" + name + "]");
+            debugLog("- Recolored: [" + result + "]");
         }
 
         return result;
@@ -232,30 +223,21 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         String pattern = colorRule.getPartPattern();
         String colorCode = colorRule.getColorCode();
 
-        // Special case for {all} pattern
         if (pattern.equals("{all}")) {
-            boolean applied = false;
             for (int i = 0; i < colorByIndex.length; i++) {
                 colorByIndex[i] = colorCode;
-                applied = true;
             }
-            return applied;
+            return true;
         }
 
         try {
-            // Convert pattern to regex using utility class
             String regexPattern = ShaderPatternUtil.convertToRegex(pattern);
-
-            // Create pattern and matcher
             Pattern compiledPattern = Pattern.compile(regexPattern);
             Matcher matcher = compiledPattern.matcher(input);
 
             boolean applied = false;
             while (matcher.find()) {
-                if (matcher.start() == matcher.end()) {
-                    continue;
-                }
-
+                if (matcher.start() == matcher.end()) continue;
                 for (int i = matcher.start(); i < matcher.end(); i++) {
                     colorByIndex[i] = colorCode;
                 }
@@ -263,7 +245,7 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
             }
             return applied;
         } catch (PatternSyntaxException e) {
-            IrisShaderFolder.LOGGER.error("Invalid pattern in color rule: " + pattern, e);
+            IrisShaderFolder.log(3, "Invalid pattern in color rule: " + pattern + ": " + e.getMessage());
             return false;
         }
     }
@@ -276,21 +258,15 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
             String nextColorCode = colorByIndex[i];
 
             if (!Objects.equals(currentColorCode, nextColorCode)) {
-                if (currentColorCode != null) {
-                    result.append("§r");
-                }
-                if (nextColorCode != null) {
-                    result.append(nextColorCode);
-                }
+                if (currentColorCode != null) result.append("§r");
+                if (nextColorCode != null) result.append(nextColorCode);
                 currentColorCode = nextColorCode;
             }
 
             result.append(input.charAt(i));
         }
 
-        if (currentColorCode != null) {
-            result.append("§r");
-        }
+        if (currentColorCode != null) result.append("§r");
 
         return result.toString();
     }
@@ -300,7 +276,6 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
         loggedRecolors.clear();
     }
 
-    // Add implementation of interface method
     @Override
     public void onConfigUpdate() {
         updateRules();
@@ -315,13 +290,8 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
             this.colorRules = colorRules;
         }
 
-        public String getShaderPattern() {
-            return shaderPattern;
-        }
-
-        public List<ColorRule> getColorRules() {
-            return colorRules;
-        }
+        public String getShaderPattern() { return shaderPattern; }
+        public List<ColorRule> getColorRules() { return colorRules; }
     }
 
     private static class ColorRule {
@@ -333,12 +303,7 @@ public class ShaderRecolorSystem implements ConfigManager.ConfigUpdateListener {
             this.colorCode = colorCode;
         }
 
-        public String getPartPattern() {
-            return partPattern;
-        }
-
-        public String getColorCode() {
-            return colorCode;
-        }
+        public String getPartPattern() { return partPattern; }
+        public String getColorCode() { return colorCode; }
     }
 }

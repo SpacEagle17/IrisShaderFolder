@@ -1,12 +1,13 @@
 package com.spaceagle17.iris_shader_folder.forge.mixin.modern;
 
-import com.spaceagle17.iris_shader_folder.forge.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.forge.ShaderFilterSystem;
-import com.spaceagle17.iris_shader_folder.forge.ShaderReorderSystem;
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
 import com.spaceagle17.iris_shader_folder.forge.mixin.IrisShaderFolderMixinPlugin;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -27,10 +28,8 @@ public class IrisModernHideShaderPacksMixin {
     private List<String> filterAndReorderShaderPacks(List<String> names) {
         ShaderFilterSystem filterSystem = ShaderFilterSystem.getInstance();
         ShaderReorderSystem reorderSystem = ShaderReorderSystem.getInstance();
-        
-        if (IrisShaderFolder.debugLoggingEnabled) {
-            System.out.println("This is Iris Modern!!");
-        }
+
+        irisShaderFolder$debugLog("This is Iris Modern!!");
         
         // First filter the packs
         List<String> filteredPacks = names.stream()
@@ -39,5 +38,10 @@ public class IrisModernHideShaderPacksMixin {
         
         // Then reorder them
         return reorderSystem.reorderShaderPacks(filteredPacks);
+    }
+
+    @Unique
+    private static void irisShaderFolder$debugLog(String message) {
+        IrisShaderFolder.debugLog("[IrisModernHideShaderPacksMixin] " + message);
     }
 }
