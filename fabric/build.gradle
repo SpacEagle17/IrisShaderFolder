@@ -1,0 +1,123 @@
+plugins {
+	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'maven-publish'
+	id "me.modmuss50.mod-publish-plugin"
+}
+
+version = "${versionProps.getProperty('mod_version')}-fabric"
+group = mod_group_id
+
+base {
+	archivesName = archives_base_name
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation project(':common')
+
+	minecraft "com.mojang:minecraft:${minecraft_version}"
+	mappings(loom.layered {
+		officialMojangMappings()
+		"net.fabricmc:yarn:${yarn_mappings}:v2"
+	})
+	modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 8
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+
+	from("../LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}" }
+	}
+}
+
+remapJar {
+	archiveClassifier.set('')
+	destinationDirectory.set(file("${rootProject.buildDir}/libs"))
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = archives_base_name
+			from components.java
+		}
+	}
+}
+
+// Make publish tasks depend on root confirmation and check skip flags
+tasks.configureEach { task ->
+	if (task.name == 'publishCurseforge') {
+		task.dependsOn rootProject.tasks.confirmPublish
+		task.onlyIf { !rootProject.ext.skipCurseforge }
+	}
+	if (task.name == 'publishModrinth') {
+		task.dependsOn rootProject.tasks.confirmPublish
+		task.onlyIf { !rootProject.ext.skipModrinth }
+	}
+}
+
+publishMods {
+	file = remapJar.archiveFile
+
+	changelog = rootProject.ext.changelogFile.text
+
+	displayName = "Iris Shader Folder ${project.version}"
+
+	type = STABLE
+	modLoaders.add("fabric")
+	modLoaders.add("quilt")
+
+	dryRun = rootProject.ext.publishTestRun
+
+	curseforge {
+		projectId = curseforge_project_id
+		accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+		minecraftVersionRange {
+			start = "1.20.1"
+			end = "latestRelease"
+		}
+		clientRequired = true
+		serverRequired = false
+		requires("irisshaders")
+	}
+	modrinth {
+		projectId = modrinth_project_id
+		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+		minecraftVersionRange {
+			start = "1.20.1"
+			end = "latestRelease"
+			includeSnapshots = true
+		}
+
+		requires {
+			slug = "iris"
+		}
+	}
+}
+
+tasks.named('publishMods').configure {
+	dependsOn rootProject.tasks.confirmPublish
+}

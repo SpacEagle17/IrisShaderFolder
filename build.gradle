@@ -1,78 +1,249 @@
+// Root build.gradle for multi-loader IrisShaderFolder
+// This orchestrates building and publishing all mod loader variants
+
 plugins {
-	id 'fabric-loom' version "1.6-SNAPSHOT"
-	id 'maven-publish'
+	id 'base'
 }
 
-version = project.mod_version
-group = project.maven_group
+// Load version properties once for all projects
+def versionProps = new Properties()
+file("version.properties").withInputStream { versionProps.load(it) }
 
-base {
-	archivesName = project.archives_base_name
+// Load gradle properties
+def gradleProps = new Properties()
+file("gradle.properties").withInputStream { gradleProps.load(it) }
+
+// Global publishing configuration
+ext.publishTestRun = !(gradleProps.getProperty('do_live_publishing', 'false').toBoolean())
+
+ext.changelogFile = file("CHANGELOG.md")
+ext.publishConfirmed = false
+ext.skipCurseforge = false
+ext.skipModrinth = false
+
+allprojects {
+	group = 'com.spaceagle17'
+	ext.versionProps = versionProps
+	ext.changelogFile = rootProject.ext.changelogFile
+	ext.publishTestRun = rootProject.ext.publishTestRun
 }
 
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-}
+// Validate the changelog at root level
+tasks.register('validateChangelog') {
+	outputs.upToDateWhen { false }
+	doLast {
+		def baseVersion = versionProps.getProperty('mod_version')
 
-dependencies {
-	// To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-//    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    mappings(loom.layered {
-        officialMojangMappings()
-        "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    })
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-}
+		if (!changelogFile.exists()) {
+			throw new GradleException("CHANGELOG.md is missing. Please create it with release notes and try again.")
+		}
 
-processResources {
-	inputs.property "version", project.version
+		def changelogContent = changelogFile.text
 
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		if (!changelogContent.contains(baseVersion)) {
+			throw new GradleException("CHANGELOG.md does not contain version ${baseVersion}. Please update the changelog before publishing.")
+		}
+
+		println "✓ Changelog validated for version: ${baseVersion}"
 	}
 }
 
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 8
-}
+// Confirmation task — runs once for all projects before any publish
+tasks.register('confirmPublish') {
+	dependsOn validateChangelog
 
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+	doLast {
+		if (!publishConfirmed) {
+			Thread.sleep(6500)
+			println "\n${"=" * 60}"
+			println "PUBLISH CONFIRMATION"
+			println "${"=" * 60}"
+			println "Base Version: ${versionProps.getProperty('mod_version')}"
+			println "Test Run: ${publishTestRun ? publishTestRun : "${publishTestRun}"}"
+			println "${"=" * 60}"
 
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
-}
+			System.out.print("Are you sure you want to proceed? (yes/no): ")
+			System.out.flush()
 
-jar {
-	inputs.property "archivesName", project.base.archivesName
+			def reader = new BufferedReader(new InputStreamReader(System.in))
+			def finalConfirmation = reader.readLine()?.toLowerCase()?.trim()
 
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
-}
+			if (finalConfirmation != 'yes' && finalConfirmation != 'y') {
+				throw new GradleException("Publishing cancelled.")
+			}
 
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
+			if (!publishTestRun) {
+				println "\n${"!" * 60}"
+				println "⚠️  LIVE PUBLISH WARNING ⚠️"
+				println "${"!" * 60}"
+				println "NOT A TEST RUN!"
+				println "This will perform a REAL UPLOAD to CurseForge and/or Modrinth!"
+				println "Files will be publicly available immediately!"
+				println "${"!" * 60}"
+				System.out.print("\nAre you ABSOLUTELY SURE you want to proceed? (yes/no): ")
+				System.out.flush()
+
+				def liveConfirmation = reader.readLine()?.toLowerCase()?.trim()
+
+				if (liveConfirmation != 'yes' && liveConfirmation != 'y') {
+					throw new GradleException("Live publishing cancelled. No files were uploaded.")
+				}
+
+				println "\n✓ Live publish confirmed. Proceeding with REAL upload...\n"
+			}
+
+			System.out.print("\nPublish to (1=Both, 2=CurseForge only, 3=Modrinth only): ")
+			System.out.flush()
+
+			def platformChoice = reader.readLine()?.trim()
+
+			if (platformChoice == '2') {
+				skipModrinth = true
+				println "Selected: CurseForge only"
+			} else if (platformChoice == '3') {
+				skipCurseforge = true
+				println "Selected: Modrinth only"
+			} else if (platformChoice == '1') {
+				println "Selected: Both platforms"
+			} else {
+				throw new GradleException("Invalid selection. Publishing cancelled.")
+			}
+
+			publishConfirmed = true
+			println "\nConfirmation complete. Proceeding with publishing...\n"
 		}
 	}
+}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+// Clean the root build/libs directory
+tasks.register('cleanLibs') {
+	group = 'build'
+	description = 'Cleans the root build/libs directory'
+
+	doLast {
+		def libsDir = file("${rootProject.buildDir}/libs")
+		if (libsDir.exists()) {
+			println "Cleaning ${libsDir.absolutePath}..."
+			libsDir.deleteDir()
+			println "✓ Root build/libs directory cleaned"
+		}
 	}
 }
+
+// Build all loaders
+tasks.register('buildAll') {
+	group = 'build'
+	description = 'Builds all mod loader variants'
+
+	dependsOn cleanLibs
+
+	if (project.findProject(':fabric') != null) {
+		dependsOn ':fabric:build'
+	}
+	if (project.findProject(':forge') != null) {
+		dependsOn ':forge:build'
+	}
+	if (project.findProject(':neoforge') != null) {
+		dependsOn ':neoforge:build'
+	}
+
+	doLast {
+		Thread.sleep(2000)
+		def libsDir = file("${rootProject.buildDir}/libs")
+		def zipFile = file("${libsDir}/IrisShaderFolder_UNZIP_ME.zip")
+
+		if (libsDir.exists()) {
+			ant.zip(destfile: zipFile) {
+				fileset(dir: libsDir) {
+					exclude(name: zipFile.name)
+				}
+			}
+			println "Created ${zipFile.absolutePath}"
+		}
+
+		println "\n" + "=" * 60
+		println "All mod loader variants built successfully!"
+		println "=" * 60
+		println "All JARs are available in: build/libs/"
+		println "=" * 60
+	}
+}
+
+// Publish all loaders
+tasks.register('publishAll') {
+	group = 'publishing'
+	description = 'Publishes all mod loader variants in the correct order'
+
+	dependsOn cleanLibs
+
+	if (project.findProject(':forge') != null) {
+		dependsOn ':forge:publishMods'
+	}
+	if (project.findProject(':neoforge') != null) {
+		dependsOn ':neoforge:publishMods'
+	}
+	if (project.findProject(':fabric') != null) {
+		dependsOn ':fabric:publishMods'
+	}
+
+	dependsOn confirmPublish
+
+	doLast {
+		println "\n" + "=" * 60
+		println "All mod loader variants published successfully!"
+		println "=" * 60
+	}
+}
+
+// Enforce sequential publishing order: forge -> neoforge -> fabric
+gradle.projectsEvaluated {
+	def loaders = [
+		[name: 'forge',
+		 publishMods: tasks.findByPath(':forge:publishMods'),
+		 curseforge: tasks.findByPath(':forge:publishCurseforge'),
+		 modrinth: tasks.findByPath(':forge:publishModrinth')],
+
+		[name: 'neoforge',
+		 publishMods: tasks.findByPath(':neoforge:publishMods'),
+		 curseforge: tasks.findByPath(':neoforge:publishCurseforge'),
+		 modrinth: tasks.findByPath(':neoforge:publishModrinth')],
+
+		[name: 'fabric',
+		 publishMods: tasks.findByPath(':fabric:publishMods'),
+		 curseforge: tasks.findByPath(':fabric:publishCurseforge'),
+		 modrinth: tasks.findByPath(':fabric:publishModrinth')]
+	]
+
+	def previousActive = null
+	loaders.each { current ->
+		if (current.publishMods) {
+			if (previousActive) {
+				println "[Publish Order] ${current.name} will wait for ${previousActive.name}"
+
+				def delayTaskName = "delayBefore${current.name.capitalize()}Publish"
+				def delayTask = tasks.create(delayTaskName) {
+					dependsOn previousActive.publishMods
+					doLast {
+						int delaySeconds = 6
+						println "\n${"=" * 60}"
+						println "Waiting ${delaySeconds} seconds before publishing ${current.name}..."
+						println "${"=" * 60}"
+						for (int i = delaySeconds; i > 0; i--) {
+							print "${i}... "
+							System.out.flush()
+							Thread.sleep(1000)
+						}
+						println "0\n"
+					}
+				}
+
+				current.publishMods.dependsOn(delayTask)
+				current.curseforge?.dependsOn(delayTask)
+				current.modrinth?.dependsOn(delayTask)
+			}
+			previousActive = current
+		}
+	}
+}
+
+defaultTasks 'buildAll'

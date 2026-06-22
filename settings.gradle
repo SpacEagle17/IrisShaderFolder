@@ -1,10 +1,27 @@
 pluginManagement {
+	includeBuild(file("build-logic/mod-publish-plugin")) // Locally include the mod-publish-plugin to have latestRelease available on Gradle 8
+
 	repositories {
 		maven {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
 		}
+		maven {
+			name = 'NeoForged'
+			url = 'https://maven.neoforged.net/releases'
+		}
+		maven {
+			name = 'MinecraftForge'
+			url = 'https://maven.minecraftforge.net/'
+		}
 		mavenCentral()
 		gradlePluginPortal()
 	}
 }
+
+rootProject.name = 'IrisShaderFolder'
+
+include 'common'
+include 'fabric'
+include 'forge'
+include 'neoforge'

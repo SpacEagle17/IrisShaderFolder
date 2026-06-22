@@ -1,0 +1,89 @@
+// Placeholder build script for the NeoForge submodule.
+// When implementing NeoForge support, replace the 'java' plugin with:
+//   id 'net.neoforged.moddev' version '2.0.141'
+//   id 'com.gradleup.shadow' version '8.3.6'
+// and add the neoForge { version = "..." runs { ... } mods { ... } } block.
+// Note: NeoForge 1.21+ requires Java 21 as a Minecraft hard requirement.
+
+plugins {
+	id 'java'
+	id "me.modmuss50.mod-publish-plugin"
+}
+
+version = "${versionProps.getProperty('mod_version')}-neoforge"
+group = mod_group_id
+
+base {
+	archivesName = archives_base_name
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation project(':common')
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 8
+}
+
+// Make publish tasks depend on root confirmation and check skip flags
+tasks.whenTaskAdded { task ->
+	if (task.name == 'publishCurseforge') {
+		task.dependsOn rootProject.tasks.confirmPublish
+		task.onlyIf { !rootProject.ext.skipCurseforge }
+	}
+	if (task.name == 'publishModrinth') {
+		task.dependsOn rootProject.tasks.confirmPublish
+		task.onlyIf { !rootProject.ext.skipModrinth }
+	}
+}
+
+publishMods {
+	file = jar.archiveFile
+
+	changelog = rootProject.ext.changelogFile.text
+
+	displayName = "Iris Shader Folder ${project.version}"
+
+	type = STABLE
+	modLoaders.add("neoforge")
+
+	dryRun = rootProject.ext.publishTestRun
+
+	curseforge {
+		projectId = curseforge_project_id
+		accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+		minecraftVersionRange {
+			start = "1.21"
+			end = "latestRelease"
+		}
+		clientRequired = true
+		serverRequired = false
+		requires("irisshaders")
+	}
+	modrinth {
+		projectId = modrinth_project_id
+		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+		minecraftVersionRange {
+			start = "1.21"
+			end = "latestRelease"
+			includeSnapshots = true
+		}
+
+		requires {
+			slug = "iris"
+		}
+	}
+}
+
+tasks.named('publishMods').configure {
+	dependsOn rootProject.tasks.confirmPublish
+}
