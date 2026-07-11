@@ -1,7 +1,7 @@
 package com.spaceagle17.iris_shader_folder.fabric.mixin.modern;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderTooltipSystem;
 import com.spaceagle17.iris_shader_folder.fabric.IIrisShaderPackScreen;
 import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import org.spongepowered.asm.mixin.*;

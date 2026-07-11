@@ -1,5 +1,6 @@
-package com.spaceagle17.iris_shader_folder;
+package com.spaceagle17.iris_shader_folder.functionality;
 
+import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
 import com.spaceagle17.iris_shader_folder.config.ConfigManager;
 import com.spaceagle17.iris_shader_folder.util.ShaderPatternUtil;
 import java.util.*;

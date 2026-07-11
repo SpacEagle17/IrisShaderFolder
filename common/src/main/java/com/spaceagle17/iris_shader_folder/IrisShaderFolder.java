@@ -54,7 +54,7 @@ public class IrisShaderFolder {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 ConfigManager.stopConfigWatcher();
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
             }
         }));
     }

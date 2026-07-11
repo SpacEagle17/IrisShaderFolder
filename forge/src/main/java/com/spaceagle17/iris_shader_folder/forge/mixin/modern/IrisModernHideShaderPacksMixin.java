@@ -1,8 +1,8 @@
 package com.spaceagle17.iris_shader_folder.forge.mixin.modern;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderFilterSystem;
-import com.spaceagle17.iris_shader_folder.ShaderReorderSystem;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderFilterSystem;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderReorderSystem;
 import com.spaceagle17.iris_shader_folder.forge.mixin.IrisShaderFolderMixinPlugin;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;

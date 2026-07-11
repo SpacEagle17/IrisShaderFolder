@@ -1,7 +1,7 @@
 package com.spaceagle17.iris_shader_folder.neoforge.mixin;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
-import com.spaceagle17.iris_shader_folder.ShaderTooltipSystem;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderTooltipSystem;
 import com.spaceagle17.iris_shader_folder.neoforge.IIrisShaderPackScreen;
 import net.minecraft.network.chat.Component;
 import com.spaceagle17.iris_shader_folder.util.ShaderName;
