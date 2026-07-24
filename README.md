@@ -35,10 +35,7 @@ Iris Shader Folder Mod lets you filter out unwanted shader packs, organize the m
 
 ## For Shaderpack Developers
 Add your own tooltips easily!
-Create a `pack.json` under `/shaders/` (inspired by Aperture) and in json format include:
-```json
-"description": "Your Description"
-```
+Add a `shaderDescription=Your Description` line to `/shaders/lang/en_us.lang` (and any other language file to translate it).
 
 ## Configuration
 Edit the config file at:
