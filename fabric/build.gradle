@@ -85,7 +85,7 @@ tasks.configureEach { task ->
 publishMods {
 	file = remapJar.archiveFile
 
-	changelog = rootProject.ext.changelogFile.text
+	changelog = rootProject.ext.readChangelog()
 
 	displayName = "Iris Shader Folder ${project.version}"
 
