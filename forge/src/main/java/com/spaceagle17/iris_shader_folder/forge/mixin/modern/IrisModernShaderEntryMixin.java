@@ -1,9 +1,10 @@
 package com.spaceagle17.iris_shader_folder.forge.mixin.modern;
 
 import com.spaceagle17.iris_shader_folder.IrisShaderFolder;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderRecolorSystem;
+import com.spaceagle17.iris_shader_folder.functionality.ShaderRenameSystem;
 import com.spaceagle17.iris_shader_folder.functionality.ShaderTooltipSystem;
 import com.spaceagle17.iris_shader_folder.forge.IIrisShaderPackScreen;
-import com.spaceagle17.iris_shader_folder.util.ShaderName;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +25,10 @@ public class IrisModernShaderEntryMixin {
 
     @Unique
     private String currentShaderNameRecolored;
-    
+
+    @Unique
+    private String currentShaderNameRenamedPlain;
+
     @Unique
     private boolean isCurrentlyHovered;
     
@@ -55,7 +59,8 @@ public class IrisModernShaderEntryMixin {
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At(value = "STORE", ordinal = 0),
         ordinal = 0,
@@ -64,19 +69,95 @@ public class IrisModernShaderEntryMixin {
         require = 0
     )
     private String modifyNameVariable(String name) {
-        String recoloredName = ShaderName.renameShader(name);
         this.currentShaderName = name;
-        this.currentShaderNameRecolored = recoloredName;
-        return recoloredName;
+
+        // Rename first (here we can change the visible text/length), but defer recoloring
+        // until the final read below - the § codes are invisible and should not affect the vanilla width check that runs in between.
+        String renamedPlain = ShaderRenameSystem.getInstance().renameShaderName(name);
+        this.currentShaderNameRenamedPlain = renamedPlain;
+        this.currentShaderNameRecolored = ShaderRecolorSystem.getInstance().recolorShaderName(renamedPlain);
+
+        return renamedPlain;
     }
-    
+
+    /**
+     * "name" is read exactly 3 times in this method:
+     * the width check, the substring truncation, and here when it's added to the Component.literal(name)
+     * Only this last read should see the recolored text
+     */
     @ModifyVariable(
         method = {
             "render",
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
+        },
+        at = @At(value = "LOAD", ordinal = 2),
+        ordinal = 0,
+        name = "name",
+        remap = false,
+        require = 0
+    )
+    private String recolorFinalNameVariable(String name) {
+        try {
+            return irisShaderFolder$recolorDisplayName(name);
+        } catch (Throwable ignored) {
+            return name;
+        }
+    }
+
+    /**
+     * Recolors the final, plain display name. If ... was not added, use recoloring directly. If ... was added,
+     * the fully-recolored name is cut down to the same number of visible characters (keeping any §-codes intact)
+     * so the injected color codes never influence where the "..." was placed.
+     */
+    @Unique
+    private String irisShaderFolder$recolorDisplayName(String finalPlainName) {
+        if (finalPlainName.equals(this.currentShaderNameRenamedPlain) && this.currentShaderNameRecolored != null) {
+            return this.currentShaderNameRecolored;
+        }
+
+        if (finalPlainName.endsWith("...") && this.currentShaderNameRecolored != null) {
+            int visibleChars = finalPlainName.length() - 3;
+            return irisShaderFolder$cutPreservingCodes(this.currentShaderNameRecolored, visibleChars) + "...";
+        }
+
+        return ShaderRecolorSystem.getInstance().recolorShaderName(finalPlainName);
+    }
+
+    @Unique
+    private static String irisShaderFolder$cutPreservingCodes(String formatted, int visibleChars) {
+        if (visibleChars <= 0) {
+            return "";
+        }
+
+        StringBuilder result = new StringBuilder();
+        int visibleCount = 0;
+
+        for (int i = 0; i < formatted.length() && visibleCount < visibleChars; i++) {
+            char c = formatted.charAt(i);
+            if (c == '§' && i + 1 < formatted.length()) {
+                result.append(c).append(formatted.charAt(i + 1));
+                i++;
+            } else {
+                result.append(c);
+                visibleCount++;
+            }
+        }
+
+        return result.toString();
+    }
+
+    @ModifyVariable(
+        method = {
+            "render",
+            "renderContent",
+            "method_25343",
+            "m_6311_",
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At("HEAD"),
         ordinal = 0,
@@ -95,7 +176,8 @@ public class IrisModernShaderEntryMixin {
             "renderContent",
             "method_25343",
             "m_6311_",
-            "func_230432_a_"
+            "func_230432_a_",
+            "extractContent"
         },
         at = @At("TAIL"),
         require = 0
